@@ -66,6 +66,8 @@ template<class N, class M> class LoopBase;
 ///
 template<class BlockT, class LoopT>
 class LoopBase {
+  static uint64_t IDCounter;
+
   LoopT *ParentLoop;
   // Loops contained entirely within this one.
   std::vector<LoopT *> SubLoops;
@@ -82,8 +84,9 @@ class LoopBase {
   const LoopBase<BlockT, LoopT>&
     operator=(const LoopBase<BlockT, LoopT> &) = delete;
 public:
+  uint64_t LoopId;
   /// This creates an empty loop.
-  LoopBase() : ParentLoop(nullptr) {}
+  LoopBase() : ParentLoop(nullptr), LoopId(IDCounter) {IDCounter++;}
   ~LoopBase() {
     for (size_t i = 0, e = SubLoops.size(); i != e; ++i)
       delete SubLoops[i];
@@ -352,6 +355,9 @@ protected:
     DenseBlockSet.insert(BB);
   }
 };
+
+template<class BlockT, class LoopT>
+uint64_t LoopBase<BlockT, LoopT>::IDCounter = 0;
 
 template<class BlockT, class LoopT>
 raw_ostream& operator<<(raw_ostream &OS, const LoopBase<BlockT, LoopT> &Loop) {

@@ -28,6 +28,8 @@ add_llvm_library(LLVMAnalysis
   DomPrinter.cpp
   DominanceFrontier.cpp
   EHPersonalities.cpp
+  FeatureLogger.cpp
+  Features.cpp
   GlobalsModRef.cpp
   IVUsers.cpp
   IndirectCallPromotionAnalysis.cpp
@@ -44,6 +46,7 @@ add_llvm_library(LLVMAnalysis
   Lint.cpp
   Loads.cpp
   LoopAccessAnalysis.cpp
+  LoopFeatures.cpp
   LoopUnrollAnalyzer.cpp
   LoopInfo.cpp
   LoopPass.cpp

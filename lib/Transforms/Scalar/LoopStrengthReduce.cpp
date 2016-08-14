@@ -73,7 +73,8 @@
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
-#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FeatureLogger.h"
+#include "llvm/Support/LoopFeatures.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -95,6 +96,10 @@ static const unsigned MaxIVUsers = 200;
 static cl::opt<bool> EnablePhiElim(
   "enable-lsr-phielim", cl::Hidden, cl::init(true),
   cl::desc("Enable LSR phi elimination"));
+
+static cl::opt<bool> OuterLSR("outer-lsr", cl::Hidden, 
+  cl::desc("Use Loop Strength Reduction for outer loops"), 
+  cl::init(false));
 
 #ifndef NDEBUG
 // Stress test IV chain generation.
@@ -4773,6 +4778,11 @@ LSRInstance::LSRInstance(Loop *L, IVUsers &IU, ScalarEvolution &SE,
                          const TargetTransformInfo &TTI)
     : IU(IU), SE(SE), DT(DT), LI(LI), TTI(TTI), L(L), Changed(false),
       IVIncInsertPos(nullptr) {
+  // Collect features to ML.
+  LoopFeatures Features(L, "LoopStrengthReduce", IU);
+  FeatureLogger Logger;
+  Logger.Log(Features);
+  
   // If LoopSimplify form is not available, stay out of trouble.
   if (!L->isLoopSimplifyForm())
     return;
@@ -4831,7 +4841,7 @@ LSRInstance::LSRInstance(Loop *L, IVUsers &IU, ScalarEvolution &SE,
   if (IU.empty()) return;
 
   // Skip nested loops until we can model them better with formulae.
-  if (!L->empty()) {
+  if (!OuterLSR && !L->empty()) {
     DEBUG(dbgs() << "LSR skipping outer loop " << *L << "\n");
     return;
   }
