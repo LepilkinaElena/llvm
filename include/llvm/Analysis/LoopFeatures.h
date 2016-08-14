@@ -8,15 +8,9 @@
 #ifndef LLVM_SUPPORT_LOOPFEATURES_H
 #define LLVM_SUPPORT_LOOPFEATURES_H
 
-<<<<<<< HEAD
-#include "llvm/Analysis/LoopInfo.h"
-#include "llvm/Analysis/IVUsers.h"
-#include "llvm/Support/Features.h"
-=======
-#include "llvm/Support/Features.h"
+#include "llvm/Analysis/Features.h"
 #include "llvm/Analysis/IVUsers.h"
 
->>>>>>> Перенесла классы для характеристик и их логирования.
 
 namespace llvm {
 
