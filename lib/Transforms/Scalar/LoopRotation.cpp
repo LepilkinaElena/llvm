@@ -17,6 +17,8 @@
 #include "llvm/Analysis/BasicAliasAnalysis.h"
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/CodeMetrics.h"
+#include "llvm/Analysis/FeatureLogger.h"
+#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/LoopPass.h"
@@ -664,6 +666,11 @@ public:
   bool runOnLoop(Loop *L, LPPassManager &LPM) override {
     if (skipLoop(L))
       return false;
+    // Collect features to ML.
+    LoopFeatures Features(L, "LoopRotation");
+    FeatureLogger Logger;
+    Logger.Log(Features);
+
     Function &F = *L->getHeader()->getParent();
 
     auto *LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();

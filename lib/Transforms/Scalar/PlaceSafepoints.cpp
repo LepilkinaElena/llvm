@@ -53,6 +53,8 @@
 #include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/CFG.h"
+#include "llvm/Analysis/FeatureLogger.h"
+#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/Dominators.h"
@@ -305,6 +307,11 @@ bool PlaceBackedgeSafepointsImpl::runOnLoop(Loop *L) {
   // Note: In common usage, there will be only one edge due to LoopSimplify
   // having run sometime earlier in the pipeline, but this code must be correct
   // w.r.t. loops with multiple backedges.
+  // Collect features to ML.
+  LoopFeatures Features(L, "PlaceSafepoints");
+  FeatureLogger Logger;
+  Logger.Log(Features);
+
   BasicBlock *Header = L->getHeader();
   SmallVector<BasicBlock*, 16> LoopLatches;
   L->getLoopLatches(LoopLatches);

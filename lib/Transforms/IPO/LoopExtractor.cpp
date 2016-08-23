@@ -16,6 +16,8 @@
 
 #include "llvm/Transforms/IPO.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/Analysis/FeatureLogger.h"
+#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Instructions.h"
@@ -83,6 +85,11 @@ Pass *llvm::createLoopExtractorPass() { return new LoopExtractor(); }
 bool LoopExtractor::runOnLoop(Loop *L, LPPassManager &) {
   if (skipLoop(L))
     return false;
+
+  // Collect features to ML.
+  LoopFeatures Features(L, "LoopExtract");
+  FeatureLogger Logger;
+  Logger.Log(Features);
 
   // Only visit top-level loops.
   if (L->getParentLoop())

@@ -2,7 +2,7 @@
 
 using namespace llvm;
 
-LoopFeatures::LoopFeatures(const Loop* L, const std::string &CurPassName, const IVUsers &IU) {
+LoopFeatures::LoopFeatures(const Loop* L, const std::string &CurPassName) {
   LoopId = L->LoopId;
   PassName = CurPassName;
   NumIVUsers = 0;
@@ -10,10 +10,14 @@ LoopFeatures::LoopFeatures(const Loop* L, const std::string &CurPassName, const 
   IsEmpty = L->empty();
   NumIntToFloatCast = 0;
   HasLoopPreheader = L->getLoopPreheader();
-  CountIntToFloatCast(IU);
   NumTermBrBlocks = 0;
   CountTermBrBlocks(L);
   LatchBlockTermOpcode = L->getLoopLatch()->getTerminator()->getOpcode();
+}
+
+LoopFeatures::LoopFeatures(const Loop* L, const std::string &CurPassName, const IVUsers &IU) :
+  LoopFeatures(L, CurPassName) {
+  CountIntToFloatCast(IU);
   CollectAccessTypes(IU);
 }
 

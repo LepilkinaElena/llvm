@@ -28,6 +28,8 @@
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/Analysis/FeatureLogger.h"
+#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
@@ -2099,6 +2101,11 @@ void IndVarSimplify::sinkUnusedInvariants(Loop *L) {
 bool IndVarSimplify::run(Loop *L) {
   // We need (and expect!) the incoming loop to be in LCSSA.
   assert(L->isRecursivelyLCSSAForm(*DT) && "LCSSA required to run indvars!");
+
+  // Collect features to ML.
+  LoopFeatures Features(L, "IndVarSimplify");
+  FeatureLogger Logger;
+  Logger.Log(Features);
 
   // If LoopSimplify form is not available, stay out of trouble. Some notes:
   //  - LSR currently only supports LoopSimplify-form loops. Indvars'

@@ -37,6 +37,8 @@
 #include "llvm/Analysis/BasicAliasAnalysis.h"
 #include "llvm/Analysis/CaptureTracking.h"
 #include "llvm/Analysis/ConstantFolding.h"
+#include "llvm/Analysis/FeatureLogger.h"
+#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/Loads.h"
 #include "llvm/Analysis/LoopInfo.h"
@@ -128,6 +130,11 @@ struct LegacyLICMPass : public LoopPass {
   }
 
   bool runOnLoop(Loop *L, LPPassManager &LPM) override {
+    // Collect features to ML.
+    LoopFeatures Features(L, "LICM");
+    FeatureLogger Logger;
+    Logger.Log(Features);
+
     if (skipLoop(L))
       return false;
 

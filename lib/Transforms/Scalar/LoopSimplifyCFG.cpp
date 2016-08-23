@@ -21,6 +21,8 @@
 #include "llvm/Analysis/BasicAliasAnalysis.h"
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/DependenceAnalysis.h"
+#include "llvm/Analysis/FeatureLogger.h"
+#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
@@ -65,6 +67,11 @@ static bool simplifyLoopCFG(Loop &L, DominatorTree &DT, LoopInfo &LI) {
 }
 
 PreservedAnalyses LoopSimplifyCFGPass::run(Loop &L, LoopAnalysisManager &AM) {
+  // Collect features to ML.
+  LoopFeatures Features(L, "LoopSimplifyCFG");
+  FeatureLogger Logger;
+  Logger.Log(Features);
+  
   const auto &FAM =
       AM.getResult<FunctionAnalysisManagerLoopProxy>(L).getManager();
   Function *F = L.getHeader()->getParent();

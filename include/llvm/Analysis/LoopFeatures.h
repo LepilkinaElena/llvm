@@ -49,6 +49,7 @@ class LoopFeatures : public Features {
   void CollectAccessTypes(const IVUsers &IU);
   
 public:
+  LoopFeatures(const Loop* L, const std::string &CurPassName);
   LoopFeatures(const Loop* L, const std::string &CurPassName, const IVUsers &IU);
   std::string ToJSON() const;
 };

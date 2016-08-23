@@ -33,6 +33,8 @@
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/CodeMetrics.h"
+#include "llvm/Analysis/FeatureLogger.h"
+#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
@@ -444,6 +446,11 @@ static Value *FindLIVLoopCondition(Value *Cond, Loop *L, bool &Changed) {
 bool LoopUnswitch::runOnLoop(Loop *L, LPPassManager &LPM_Ref) {
   if (skipLoop(L))
     return false;
+
+  // Collect features to ML.
+  LoopFeatures Features(L, "LoopUnswitch");
+  FeatureLogger Logger;
+  Logger.Log(Features);
 
   AC = &getAnalysis<AssumptionCacheTracker>().getAssumptionCache(
       *L->getHeader()->getParent());
