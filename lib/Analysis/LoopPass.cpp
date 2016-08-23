@@ -13,6 +13,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/LoopPassManager.h"
 #include "llvm/IR/IRPrintingPasses.h"
@@ -56,6 +57,30 @@ public:
 };
 
 char PrintLoopPassWrapper::ID = 0;
+
+/// PrintFeaturesLoopPass - Print features corresponding to a Loop.
+///
+class PrintFeaturesLoopPass : public LoopPass,
+                              public PrintFeaturesPass {
+public:
+  static char ID;
+  PrintFeaturesLoopPass() : LoopPass(ID), PrintFeaturesPass(dbgs(), "") {}
+  PrintFeaturesLoopPass(raw_ostream &OS, const std::string &PassName)
+      : LoopPass(ID), PrintFeaturesPass(OS, PassName) {}
+
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.setPreservesAll();
+  }
+
+  bool runOnLoop(Loop *L, LPPassManager &) override {
+    auto &IU = getAnalysis<IVUsersWrapperPass>().getIU();
+    LoopFeatures Features(L, PassName, IU);
+    run(Features);
+    return false;
+  }
+};
+
+char PrintFeaturesLoopPass::ID = 0;
 }
 
 //===----------------------------------------------------------------------===//
@@ -276,6 +301,11 @@ void LPPassManager::dumpPassStructure(unsigned Offset) {
 Pass *LoopPass::createPrinterPass(raw_ostream &O,
                                   const std::string &Banner) const {
   return new PrintLoopPassWrapper(O, Banner);
+}
+
+Pass *LoopPass::createFeaturesPrinterPass(raw_ostream &O,
+                                          const std::string &PassName) const {
+  return new PrintFeaturesLoopPass(O, PassName);
 }
 
 // Check if this pass is suitable for the current LPPassManager, if

@@ -41,6 +41,9 @@ public:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override;
 
+  Pass *createFeaturesPrinterPass(raw_ostream &O,
+                                  const std::string &PassName) const override;
+
   using llvm::Pass::doInitialization;
   using llvm::Pass::doFinalization;
 

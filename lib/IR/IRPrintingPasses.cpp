@@ -11,6 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "llvm/Analysis/Features.h"
 #include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
@@ -113,6 +114,64 @@ public:
   }
 };
 
+class PrintFeaturesModulePass : public ModulePass,
+                                public PrintFeaturesPass {
+public:
+  static char ID;
+  PrintFeaturesModulePass() : ModulePass(ID), PrintFeaturesPass(dbgs(), "") {}
+  PrintFeaturesModulePass(raw_ostream &OS, const std::string &PassName)
+      : ModulePass(ID), PrintFeaturesPass(OS, PassName) {}
+
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.setPreservesAll();
+  }
+
+  bool runOnModule(Module &M) override {
+    Features Features(PassName);
+    run(Features);
+    return false;
+  }
+};
+
+class PrintFeaturesFunctionPass : public FunctionPass,
+                                  public PrintFeaturesPass {
+public:
+  static char ID;
+  PrintFeaturesFunctionPass() : FunctionPass(ID), PrintFeaturesPass(dbgs(), "") {}
+  PrintFeaturesFunctionPass(raw_ostream &OS, const std::string &PassName)
+      : FunctionPass(ID), PrintFeaturesPass(OS, PassName) {}
+
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.setPreservesAll();
+  }
+
+  bool runOnFunction(Function &F) override {
+    Features Features(PassName);
+    run(Features);
+    return false;
+  }
+};
+
+class PrintFeaturesBasicBlockPass : public BasicBlockPass,
+                                    public PrintFeaturesPass {
+public:
+  static char ID;
+  PrintFeaturesBasicBlockPass() : BasicBlockPass(ID), PrintFeaturesPass(dbgs(), "") {}
+  PrintFeaturesBasicBlockPass(raw_ostream &OS, const std::string &PassName)
+      : BasicBlockPass(ID), PrintFeaturesPass(OS, PassName) {}
+
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.setPreservesAll();
+  }
+
+  bool runOnBasicBlock(BasicBlock &BB) override {
+    Features Features(PassName);
+    run(Features);
+    return false;
+  }
+};
+
+
 }
 
 char PrintModulePassWrapper::ID = 0;
@@ -124,6 +183,15 @@ INITIALIZE_PASS(PrintFunctionPassWrapper, "print-function",
 char PrintBasicBlockPass::ID = 0;
 INITIALIZE_PASS(PrintBasicBlockPass, "print-bb", "Print BB to stderr", false,
                 false)
+char PrintFeaturesModulePass::ID = 0;
+/*INITIALIZE_PASS(PrintFeaturesModulePass, "print-features-module",
+                "Print module to stderr", false, false)*/
+char PrintFeaturesFunctionPass::ID = 0;
+/*INITIALIZE_PASS(PrintFeaturesFunctionPass, "print-features-function",
+                "Print function to stderr", false, false)*/
+char PrintFeaturesBasicBlockPass::ID = 0;
+/*INITIALIZE_PASS(PrintFeaturesBasicBlockPass, "print-features-bb", "Print BB to stderr", false,
+                false)*/
 
 ModulePass *llvm::createPrintModulePass(llvm::raw_ostream &OS,
                                         const std::string &Banner,
@@ -139,4 +207,19 @@ FunctionPass *llvm::createPrintFunctionPass(llvm::raw_ostream &OS,
 BasicBlockPass *llvm::createPrintBasicBlockPass(llvm::raw_ostream &OS,
                                                 const std::string &Banner) {
   return new PrintBasicBlockPass(OS, Banner);
+}
+
+ModulePass *llvm::createPrintFeaturesModulePass(llvm::raw_ostream &OS,
+                                        const std::string &PassName) {
+  return new PrintFeaturesModulePass(OS, PassName);
+}
+
+FunctionPass *llvm::createPrintFeaturesFunctionPass(llvm::raw_ostream &OS,
+                                                    const std::string &PassName) {
+  return new PrintFeaturesFunctionPass(OS, PassName);
+}
+
+BasicBlockPass *llvm::createPrintFeaturesBasicBlockPass(llvm::raw_ostream &OS,
+                                                        const std::string &PassName) {
+  return new PrintFeaturesBasicBlockPass(OS, PassName);
 }

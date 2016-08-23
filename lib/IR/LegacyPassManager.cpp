@@ -84,6 +84,25 @@ PrintAfterAll("print-after-all",
               llvm::cl::desc("Print IR after each pass"),
               cl::init(false));
 
+static PassOptionList
+PrintFeaturesBefore("print-features-before",
+                    llvm::cl::desc("Print static features before specified passes"),
+                    cl::Hidden);
+
+static PassOptionList
+PrintFeaturesAfter("print-features-after",
+                   llvm::cl::desc("Print static features after specified passes"),
+                   cl::Hidden);
+
+static cl::opt<bool>
+PrintFeaturesBeforeAll("print-features-before-all",
+                       llvm::cl::desc("Print static features before each pass"),
+                       cl::init(false));
+static cl::opt<bool>
+PrintFeaturesAfterAll("print-features-after-all",
+                      llvm::cl::desc("Print static features after each pass"),
+                      cl::init(false));
+
 static cl::list<std::string>
     PrintFuncsList("filter-print-funcs", cl::value_desc("function names"),
                    cl::desc("Only print IR for functions whose name "
@@ -111,10 +130,18 @@ static bool ShouldPrintBeforePass(const PassInfo *PI) {
   return PrintBeforeAll || ShouldPrintBeforeOrAfterPass(PI, PrintBefore);
 }
 
+static bool ShouldPrintFeaturesBeforePass(const PassInfo *PI) {
+  return PrintFeaturesBeforeAll || ShouldPrintBeforeOrAfterPass(PI, PrintFeaturesBefore);
+}
+
 /// This is a utility to check whether a pass should have IR dumped
 /// after it.
 static bool ShouldPrintAfterPass(const PassInfo *PI) {
   return PrintAfterAll || ShouldPrintBeforeOrAfterPass(PI, PrintAfter);
+}
+
+static bool ShouldPrintFeaturesAfterPass(const PassInfo *PI) {
+  return PrintFeaturesAfterAll || ShouldPrintBeforeOrAfterPass(PI, PrintFeaturesAfter);
 }
 
 bool llvm::isFunctionInPrintList(StringRef FunctionName) {
@@ -250,6 +277,11 @@ public:
     return createPrintFunctionPass(O, Banner);
   }
 
+  Pass *createFeaturesPrinterPass(raw_ostream &O,
+                                  const std::string &PassName) const {
+    return createPrintFeaturesFunctionPass(O, PassName);
+  }
+
   // Prepare for running an on the fly pass, freeing memory if needed
   // from a previous run.
   void releaseMemoryOnTheFly();
@@ -316,6 +348,11 @@ public:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override {
     return createPrintModulePass(O, Banner);
+  }
+
+  Pass *createFeaturesPrinterPass(raw_ostream &O,
+                                  const std::string &PassName) const {
+    return createPrintFeaturesModulePass(O, PassName);
   }
 
   /// run - Execute all of the passes scheduled for execution.  Keep track of
@@ -406,6 +443,11 @@ public:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override {
     return createPrintModulePass(O, Banner);
+  }
+
+  Pass *createFeaturesPrinterPass(raw_ostream &O,
+                                  const std::string &PassName) const {
+    return createPrintFeaturesModulePass(O, PassName);
   }
 
   /// run - Execute all of the passes scheduled for execution.  Keep track of
@@ -688,12 +730,24 @@ void PMTopLevelManager::schedulePass(Pass *P) {
     PP->assignPassManager(activeStack, getTopLevelPassManagerType());
   }
 
+  if (PI && !PI->isAnalysis() && ShouldPrintFeaturesBeforePass(PI)) {
+    Pass *PP = P->createFeaturesPrinterPass(
+      dbgs(), std::string("Before ") + P->getPassName());
+    PP->assignPassManager(activeStack, getTopLevelPassManagerType());
+  }
+
   // Add the requested pass to the best available pass manager.
   P->assignPassManager(activeStack, getTopLevelPassManagerType());
 
   if (PI && !PI->isAnalysis() && ShouldPrintAfterPass(PI)) {
     Pass *PP = P->createPrinterPass(
       dbgs(), std::string("*** IR Dump After ") + P->getPassName() + " ***");
+    PP->assignPassManager(activeStack, getTopLevelPassManagerType());
+  }
+
+  if (PI && !PI->isAnalysis() && ShouldPrintFeaturesAfterPass(PI)) {
+    Pass *PP = P->createFeaturesPrinterPass(
+      dbgs(), std::string("After ") + P->getPassName());
     PP->assignPassManager(activeStack, getTopLevelPassManagerType());
   }
 }

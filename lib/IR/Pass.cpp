@@ -14,6 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Pass.h"
+#include "llvm/Analysis/Features.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/IR/LegacyPassNameParser.h"
@@ -41,6 +42,11 @@ ModulePass::~ModulePass() { }
 Pass *ModulePass::createPrinterPass(raw_ostream &O,
                                     const std::string &Banner) const {
   return createPrintModulePass(O, Banner);
+}
+
+Pass *ModulePass::createFeaturesPrinterPass(raw_ostream &O,
+                                            const std::string &PassName) const {
+    return createPrintFeaturesModulePass(O, PassName);
 }
 
 PassManagerType ModulePass::getPotentialPassManagerType() const {
@@ -142,6 +148,11 @@ Pass *FunctionPass::createPrinterPass(raw_ostream &O,
   return createPrintFunctionPass(O, Banner);
 }
 
+Pass *FunctionPass::createFeaturesPrinterPass(raw_ostream &O,
+                                            const std::string &PassName) const {
+    return createPrintFeaturesFunctionPass(O, PassName);
+}
+
 PassManagerType FunctionPass::getPotentialPassManagerType() const {
   return PMT_FunctionPassManager;
 }
@@ -165,6 +176,11 @@ bool FunctionPass::skipFunction(const Function &F) const {
 Pass *BasicBlockPass::createPrinterPass(raw_ostream &O,
                                         const std::string &Banner) const {
   return createPrintBasicBlockPass(O, Banner);
+}
+
+Pass *BasicBlockPass::createFeaturesPrinterPass(raw_ostream &O,
+                                                const std::string &PassName) const {
+    return createPrintFeaturesBasicBlockPass(O, PassName);
 }
 
 bool BasicBlockPass::doInitialization(Function &) {
@@ -300,4 +316,8 @@ AnalysisUsage &AnalysisUsage::addRequiredTransitiveID(char &ID) {
   Required.push_back(&ID);
   RequiredTransitive.push_back(&ID);
   return *this;
+}
+
+void PrintFeaturesPass::run(Features &StaticFeatures) {
+  OS << StaticFeatures.ToJSON();
 }

@@ -27,12 +27,18 @@
 #include "llvm/CodeGen/StackProtector.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/IRPrintingPasses.h"
 
 using namespace llvm;
 
 Pass *MachineFunctionPass::createPrinterPass(raw_ostream &O,
                                              const std::string &Banner) const {
   return createMachineFunctionPrinterPass(O, Banner);
+}
+
+Pass *MachineFunctionPass::createFeaturesPrinterPass(raw_ostream &O,
+                                                     const std::string &PassName) const {
+  return createPrintFeaturesFunctionPass(O, PassName);
 }
 
 bool MachineFunctionPass::runOnFunction(Function &F) {

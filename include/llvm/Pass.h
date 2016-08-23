@@ -44,6 +44,7 @@ class AnalysisResolver;
 class PMDataManager;
 class raw_ostream;
 class StringRef;
+class Features;
 
 // AnalysisID - Use the PassInfo to identify a pass...
 typedef const void* AnalysisID;
@@ -128,6 +129,9 @@ public:
   /// pass operates on (Module, Function or MachineFunction).
   virtual Pass *createPrinterPass(raw_ostream &O,
                                   const std::string &Banner) const = 0;
+
+  virtual Pass *createFeaturesPrinterPass(raw_ostream &O,
+                          const std::string &PassName) const = 0;
 
   /// Each pass is responsible for assigning a pass manager to itself.
   /// PMS is the stack of available pass manager.
@@ -238,6 +242,9 @@ public:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override;
 
+  Pass *createFeaturesPrinterPass(raw_ostream &O,
+                          const std::string &PassName) const override;
+
   /// runOnModule - Virtual method overriden by subclasses to process the module
   /// being operated on.
   virtual bool runOnModule(Module &M) = 0;
@@ -303,6 +310,9 @@ public:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override;
 
+  Pass *createFeaturesPrinterPass(raw_ostream &O,
+                          const std::string &PassName) const override;
+
   /// runOnFunction - Virtual method overriden by subclasses to do the
   /// per-function processing of the pass.
   ///
@@ -340,6 +350,9 @@ public:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override;
 
+  Pass *createFeaturesPrinterPass(raw_ostream &O,
+                          const std::string &PassName) const override;
+
   using llvm::Pass::doInitialization;
   using llvm::Pass::doFinalization;
 
@@ -368,6 +381,16 @@ protected:
   /// skipped. This is the case when Attribute::OptimizeNone is set or when
   /// optimization bisect is over the limit.
   bool skipBasicBlock(const BasicBlock &BB) const;
+};
+
+class PrintFeaturesPass {
+  raw_ostream &OS;
+protected:
+  std::string PassName;
+public:
+  PrintFeaturesPass(raw_ostream &OS, const std::string &PassName)
+      : OS(OS), PassName(PassName) {}
+  void run(Features &StaticFeatures);
 };
 
 /// If the user specifies the -time-passes argument on an LLVM tool command line

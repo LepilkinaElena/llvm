@@ -16,8 +16,6 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/CodeMetrics.h"
-#include "llvm/Analysis/FeatureLogger.h"
-#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/OptimizationDiagnosticInfo.h"
@@ -181,11 +179,6 @@ bool LoopDataPrefetch::runOnFunction(Function &F) {
 
 bool LoopDataPrefetch::runOnLoop(Loop *L) {
   bool MadeChange = false;
-
-  // Collect features to ML.
-  LoopFeatures Features(L, "LoopDataPrefetch");
-  FeatureLogger Logger;
-  Logger.Log(Features);
 
   // Only prefetch in the inner-most loop
   if (!L->empty())

@@ -13,6 +13,7 @@
 // Most of this code has been COPIED from LoopPass.cpp
 //
 //===----------------------------------------------------------------------===//
+#include "llvm/Analysis/Features.h"
 #include "llvm/Analysis/RegionPass.h"
 #include "llvm/Analysis/RegionIterator.h"
 #include "llvm/Support/Debug.h"
@@ -209,6 +210,27 @@ public:
 };
 
 char PrintRegionPass::ID = 0;
+
+class PrintFeaturesRegionPass : public RegionPass,
+                                public PrintFeaturesPass {
+public:
+  static char ID;
+  PrintFeaturesRegionPass() : RegionPass(ID), PrintFeaturesPass(dbgs(), "") {}
+  PrintFeaturesRegionPass(raw_ostream &OS, const std::string &PassName)
+      : RegionPass(ID), PrintFeaturesPass(OS, PassName) {}
+
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.setPreservesAll();
+  }
+
+  bool runOnRegion(Region *R, RGPassManager &RGM) override {
+    Features Features(PassName);
+    run(Features);
+    return false;
+  }
+};
+
+char PrintFeaturesRegionPass::ID = 0;
 }  //end anonymous namespace
 
 //===----------------------------------------------------------------------===//
@@ -277,4 +299,9 @@ void RegionPass::assignPassManager(PMStack &PMS,
 Pass *RegionPass::createPrinterPass(raw_ostream &O,
                                   const std::string &Banner) const {
   return new PrintRegionPass(Banner, O);
+}
+
+Pass *RegionPass::createFeaturesPrinterPass(raw_ostream &O,
+                                            const std::string &PassName) const {
+  return new PrintFeaturesRegionPass(O, PassName);
 }

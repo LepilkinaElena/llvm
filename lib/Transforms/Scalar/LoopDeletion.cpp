@@ -17,8 +17,6 @@
 #include "llvm/Transforms/Scalar/LoopDeletion.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/FeatureLogger.h"
-#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/LoopPassManager.h"
@@ -261,11 +259,6 @@ Pass *llvm::createLoopDeletionPass() { return new LoopDeletionLegacyPass(); }
 bool LoopDeletionLegacyPass::runOnLoop(Loop *L, LPPassManager &) {
   if (skipLoop(L))
     return false;
-
-  // Collect features to ML.
-  LoopFeatures Features(L, "LoopDeletion");
-  FeatureLogger Logger;
-  Logger.Log(Features);
 
   DominatorTree &DT = getAnalysis<DominatorTreeWrapperPass>().getDomTree();
   ScalarEvolution &SE = getAnalysis<ScalarEvolutionWrapperPass>().getSE();

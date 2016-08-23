@@ -37,8 +37,6 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/BasicAliasAnalysis.h"
-#include "llvm/Analysis/FeatureLogger.h"
-#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/LoopAccessAnalysis.h"
 #include "llvm/Analysis/LoopPass.h"
@@ -146,11 +144,6 @@ public:
   bool runOnLoop(Loop *L, LPPassManager &LPM) override {
     if (skipLoop(L))
       return false;
-
-    // Collect features to ML.
-    LoopFeatures Features(L, "LoopIdiomRecognize");
-    FeatureLogger Logger;
-    Logger.Log(Features);
 
     AliasAnalysis *AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
     DominatorTree *DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();

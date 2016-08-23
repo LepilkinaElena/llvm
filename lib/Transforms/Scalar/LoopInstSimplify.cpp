@@ -15,8 +15,6 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AssumptionCache.h"
-#include "llvm/Analysis/FeatureLogger.h"
-#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
@@ -163,11 +161,6 @@ public:
   bool runOnLoop(Loop *L, LPPassManager &LPM) override {
     if (skipLoop(L))
       return false;
-
-    // Collect features to ML.
-    LoopFeatures Features(L, "LoopInstSimplify");
-    FeatureLogger Logger;
-    Logger.Log(Features);
 
     DominatorTreeWrapperPass *DTWP =
         getAnalysisIfAvailable<DominatorTreeWrapperPass>();

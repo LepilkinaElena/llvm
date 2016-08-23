@@ -19,8 +19,6 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/AliasSetTracker.h"
-#include "llvm/Analysis/FeatureLogger.h"
-#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/Analysis/ScalarEvolutionExpander.h"
@@ -1698,11 +1696,6 @@ bool LoopReroll::reroll(Instruction *IV, Loop *L, BasicBlock *Header,
 bool LoopReroll::runOnLoop(Loop *L, LPPassManager &LPM) {
   if (skipLoop(L))
     return false;
-
-  // Collect features to ML.
-  LoopFeatures Features(L, "LoopReroll");
-  FeatureLogger Logger;
-  Logger.Log(Features);
 
   AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
   LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();

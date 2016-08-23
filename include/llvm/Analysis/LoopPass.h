@@ -35,6 +35,9 @@ public:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override;
 
+  Pass *createFeaturesPrinterPass(raw_ostream &O,
+                          const std::string &PassName) const override;
+
   // runOnLoop - This method should be implemented by the subclass to perform
   // whatever action is necessary for the specified Loop.
   virtual bool runOnLoop(Loop *L, LPPassManager &LPM) = 0;

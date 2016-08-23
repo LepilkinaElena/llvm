@@ -1,8 +1,10 @@
 #include "llvm/Analysis/LoopFeatures.h"
+#include "llvm/Pass.h"
 
 using namespace llvm;
 
-LoopFeatures::LoopFeatures(const Loop* L, const std::string &CurPassName) {
+LoopFeatures::LoopFeatures(const Loop* L, const std::string &CurPassName, const IVUsers &IU) :
+    Features(CurPassName) {
   LoopId = L->LoopId;
   PassName = CurPassName;
   NumIVUsers = 0;
@@ -13,10 +15,6 @@ LoopFeatures::LoopFeatures(const Loop* L, const std::string &CurPassName) {
   NumTermBrBlocks = 0;
   CountTermBrBlocks(L);
   LatchBlockTermOpcode = L->getLoopLatch()->getTerminator()->getOpcode();
-}
-
-LoopFeatures::LoopFeatures(const Loop* L, const std::string &CurPassName, const IVUsers &IU) :
-  LoopFeatures(L, CurPassName) {
   CountIntToFloatCast(IU);
   CollectAccessTypes(IU);
 }

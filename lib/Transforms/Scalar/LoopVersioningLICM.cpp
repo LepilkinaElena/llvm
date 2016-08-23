@@ -67,8 +67,6 @@
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/AliasSetTracker.h"
 #include "llvm/Analysis/ConstantFolding.h"
-#include "llvm/Analysis/FeatureLogger.h"
-#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/LoopAccessAnalysis.h"
 #include "llvm/Analysis/LoopInfo.h"
@@ -509,12 +507,7 @@ void LoopVersioningLICM::setNoAliasToLoop(Loop *VerLoop) {
 bool LoopVersioningLICM::runOnLoop(Loop *L, LPPassManager &LPM) {
   if (skipLoop(L))
     return false;
-
-  // Collect features to ML.
-  LoopFeatures Features(L, "LoopVersioningLICM");
-  FeatureLogger Logger;
-  Logger.Log(Features);
-
+  
   Changed = false;
   // Get Analysis information.
   LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();

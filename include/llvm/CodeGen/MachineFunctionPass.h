@@ -73,6 +73,9 @@ private:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override;
 
+  Pass *createFeaturesPrinterPass(raw_ostream &O,
+                          const std::string &PassName) const override;
+
   bool runOnFunction(Function &F) override;
 };
 

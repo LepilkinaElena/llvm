@@ -38,6 +38,9 @@ cscope.out
 autoconf/aclocal.m4
 autoconf/autom4te.cache
 /compile_commands.json
+BUILD
+test
+utils
 
 #==============================================================================#
 # Directories to ignore (do not add trailing '/'s, they skip symlinks).
@@ -48,6 +51,7 @@ projects/*
 !projects/Makefile
 runtimes/*
 !runtimes/*.*
+utils/lit
 # Clang, which is tracked independently.
 tools/clang
 # LLDB, which is tracked independently.

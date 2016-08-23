@@ -43,8 +43,6 @@
 
 #include "llvm/ADT/Optional.h"
 #include "llvm/Analysis/BranchProbabilityInfo.h"
-#include "llvm/Analysis/FeatureLogger.h"
-#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/ScalarEvolution.h"
@@ -1371,11 +1369,6 @@ IntersectRange(ScalarEvolution &SE,
 bool InductiveRangeCheckElimination::runOnLoop(Loop *L, LPPassManager &LPM) {
   if (skipLoop(L))
     return false;
-
-  // Collect features to ML.
-  LoopFeatures Features(L, "InductiveRangeCheckElimination");
-  FeatureLogger Logger;
-  Logger.Log(Features);
 
   if (L->getBlocks().size() >= LoopSizeCutoff) {
     DEBUG(dbgs() << "irce: giving up constraining loop, too large\n";);

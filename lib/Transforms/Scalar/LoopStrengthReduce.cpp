@@ -73,8 +73,6 @@
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
-#include "llvm/Analysis/FeatureLogger.h"
-#include "llvm/Analysis/LoopFeatures.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -4778,11 +4776,6 @@ LSRInstance::LSRInstance(Loop *L, IVUsers &IU, ScalarEvolution &SE,
                          const TargetTransformInfo &TTI)
     : IU(IU), SE(SE), DT(DT), LI(LI), TTI(TTI), L(L), Changed(false),
       IVIncInsertPos(nullptr) {
-  // Collect features to ML.
-  LoopFeatures Features(L, "LoopStrengthReduce", IU);
-  FeatureLogger Logger;
-  Logger.Log(Features);
-
   // If LoopSimplify form is not available, stay out of trouble.
   if (!L->isLoopSimplifyForm())
     return;
