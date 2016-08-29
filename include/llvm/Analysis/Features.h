@@ -15,8 +15,7 @@ class Features {
 protected:
   std::string PassName;
 public:
-  Features(const std::string & PassName) :
-    PassName(PassName) {}
+  Features(const std::string & PassName);
   virtual ~Features();
   std::string BooleanToString (bool Feature) const;
   virtual std::string ToJSON() const;

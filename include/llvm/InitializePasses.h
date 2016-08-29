@@ -195,6 +195,7 @@ void initializeLoopRotateLegacyPassPass(PassRegistry&);
 void initializeLoopSimplifyCFGLegacyPassPass(PassRegistry&);
 void initializeLoopSimplifyPass(PassRegistry&);
 void initializeLoopStrengthReducePass(PassRegistry&);
+void initializePrintFeaturesLoopPassPass(PassRegistry&);
 void initializeLoopUnrollPass(PassRegistry&);
 void initializeLoopUnswitchPass(PassRegistry&);
 void initializeLoopVectorizePass(PassRegistry&);

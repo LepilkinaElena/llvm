@@ -11,3 +11,7 @@ Features::~Features() {}
 std::string Features::ToJSON() const {
   return "";
 }
+
+Features::Features(const std::string & PassName) {
+  this->PassName = PassName;
+}

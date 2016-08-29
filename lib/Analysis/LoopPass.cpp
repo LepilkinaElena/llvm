@@ -64,12 +64,18 @@ class PrintFeaturesLoopPass : public LoopPass,
                               public PrintFeaturesPass {
 public:
   static char ID;
-  PrintFeaturesLoopPass() : LoopPass(ID), PrintFeaturesPass(dbgs(), "") {}
+  PrintFeaturesLoopPass() : LoopPass(ID), PrintFeaturesPass(dbgs(), "") {
+    initializePrintFeaturesLoopPassPass(*PassRegistry::getPassRegistry());
+  }
   PrintFeaturesLoopPass(raw_ostream &OS, const std::string &PassName)
-      : LoopPass(ID), PrintFeaturesPass(OS, PassName) {}
+      : LoopPass(ID), PrintFeaturesPass(OS, PassName) {
+    initializePrintFeaturesLoopPassPass(*PassRegistry::getPassRegistry());
+  }
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
-    AU.setPreservesAll();
+    AU.addRequired<IVUsersWrapperPass>();
+    AU.addPreserved<IVUsersWrapperPass>();
+    //AU.setPreservesAll();
   }
 
   bool runOnLoop(Loop *L, LPPassManager &) override {
@@ -81,7 +87,14 @@ public:
 };
 
 char PrintFeaturesLoopPass::ID = 0;
+
 }
+
+INITIALIZE_PASS_BEGIN(PrintFeaturesLoopPass, "loop-features",
+                      "Loop Features Printing Pass", false, false)
+INITIALIZE_PASS_DEPENDENCY(IVUsersWrapperPass)
+INITIALIZE_PASS_END(PrintFeaturesLoopPass, "loop-features",
+                    "Loop Strength Reduction", false, false)
 
 //===----------------------------------------------------------------------===//
 // LPPassManager

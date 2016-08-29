@@ -21,6 +21,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Mutex.h"
 #include "llvm/Support/TimeValue.h"
@@ -102,6 +103,11 @@ static cl::opt<bool>
 PrintFeaturesAfterAll("print-features-after-all",
                       llvm::cl::desc("Print static features after each pass"),
                       cl::init(false));
+
+static cl::opt<std::string>
+FeaturesFile("features-file", 
+             llvm::cl::desc("Output file for printing static features"),
+             cl::init(""));
 
 static cl::list<std::string>
     PrintFuncsList("filter-print-funcs", cl::value_desc("function names"),
@@ -532,6 +538,13 @@ static TimingInfo *TheTimeInfo;
 //===----------------------------------------------------------------------===//
 // PMTopLevelManager implementation
 
+raw_ostream &PMTopLevelManager::getFeaturesOutput(std::string FileName) {
+  std::error_code EC;
+  static raw_fd_ostream FeaturesOutput(FileName, EC,
+                         sys::fs::OpenFlags::F_Text);
+  return FeaturesOutput;
+}
+
 /// Initialize top level manager. Create first pass manager.
 PMTopLevelManager::PMTopLevelManager(PMDataManager *PMDM) {
   PMDM->setTopLevelManager(this);
@@ -724,6 +737,12 @@ void PMTopLevelManager::schedulePass(Pass *P) {
     return;
   }
 
+  raw_ostream &FeaturesOutput(dbgs());
+
+  /*if (!FeaturesFile.empty()) {
+    FeaturesOutput(getFeaturesOutput(FeaturesFile));
+  }*/
+
   if (PI && !PI->isAnalysis() && ShouldPrintBeforePass(PI)) {
     Pass *PP = P->createPrinterPass(
       dbgs(), std::string("*** IR Dump Before ") + P->getPassName() + " ***");
@@ -732,7 +751,7 @@ void PMTopLevelManager::schedulePass(Pass *P) {
 
   if (PI && !PI->isAnalysis() && ShouldPrintFeaturesBeforePass(PI)) {
     Pass *PP = P->createFeaturesPrinterPass(
-      dbgs(), std::string("Before ") + P->getPassName());
+      FeaturesOutput, std::string("Before ") + P->getPassName());
     PP->assignPassManager(activeStack, getTopLevelPassManagerType());
   }
 
@@ -747,7 +766,7 @@ void PMTopLevelManager::schedulePass(Pass *P) {
 
   if (PI && !PI->isAnalysis() && ShouldPrintFeaturesAfterPass(PI)) {
     Pass *PP = P->createFeaturesPrinterPass(
-      dbgs(), std::string("After ") + P->getPassName());
+      FeaturesOutput, std::string("After ") + P->getPassName());
     PP->assignPassManager(activeStack, getTopLevelPassManagerType());
   }
 }

@@ -176,6 +176,7 @@ protected:
 private:
   virtual PMDataManager *getAsPMDataManager() = 0;
   virtual PassManagerType getTopLevelPassManagerType() = 0;
+  raw_ostream &getFeaturesOutput(std::string FileName);
 
 public:
   /// Schedule pass P for execution. Make sure that passes required by
