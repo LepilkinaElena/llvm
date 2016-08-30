@@ -13,7 +13,7 @@
 // Most of this code has been COPIED from LoopPass.cpp
 //
 //===----------------------------------------------------------------------===//
-#include "llvm/Analysis/Features.h"
+#include "llvm/IR/Features.h"
 #include "llvm/Analysis/RegionPass.h"
 #include "llvm/Analysis/RegionIterator.h"
 #include "llvm/Support/Debug.h"

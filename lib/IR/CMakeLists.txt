@@ -20,6 +20,7 @@ add_llvm_library(LLVMCore
   DiagnosticInfo.cpp
   DiagnosticPrinter.cpp
   Dominators.cpp
+  Features.cpp
   Function.cpp
   GCOV.cpp
   GVMaterializer.cpp
@@ -33,6 +34,7 @@ add_llvm_library(LLVMCore
   LLVMContext.cpp
   LLVMContextImpl.cpp
   LegacyPassManager.cpp
+  LoopFeatures.cpp
   MDBuilder.cpp
   Mangler.cpp
   Metadata.cpp

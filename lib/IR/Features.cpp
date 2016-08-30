@@ -1,4 +1,4 @@
-#include "llvm/Analysis/Features.h"
+#include "llvm/IR/Features.h"
 
 using namespace llvm;
 

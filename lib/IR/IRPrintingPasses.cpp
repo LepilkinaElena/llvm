@@ -11,7 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Analysis/Features.h"
+#include "llvm/IR/Features.h"
 #include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
