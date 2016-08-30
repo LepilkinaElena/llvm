@@ -737,11 +737,7 @@ void PMTopLevelManager::schedulePass(Pass *P) {
     return;
   }
 
-  raw_ostream &FeaturesOutput(dbgs());
-
-  /*if (!FeaturesFile.empty()) {
-    FeaturesOutput(getFeaturesOutput(FeaturesFile));
-  }*/
+  raw_ostream &FeaturesOutput = FeaturesFile.empty() ? dbgs() : getFeaturesOutput(FeaturesFile);
 
   if (PI && !PI->isAnalysis() && ShouldPrintBeforePass(PI)) {
     Pass *PP = P->createPrinterPass(

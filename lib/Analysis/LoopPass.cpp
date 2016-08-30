@@ -91,10 +91,10 @@ char PrintFeaturesLoopPass::ID = 0;
 }
 
 INITIALIZE_PASS_BEGIN(PrintFeaturesLoopPass, "loop-features",
-                      "Loop Features Printing Pass", false, false)
+                      "Loop Features Printing Pass", false, true)
 INITIALIZE_PASS_DEPENDENCY(IVUsersWrapperPass)
 INITIALIZE_PASS_END(PrintFeaturesLoopPass, "loop-features",
-                    "Loop Strength Reduction", false, false)
+                    "Loop Strength Reduction", false, true)
 
 //===----------------------------------------------------------------------===//
 // LPPassManager
