@@ -15,6 +15,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Analysis/LoopInfo.h"
+#include "llvm/Analysis/IVUsers.h"
+#include "llvm/IR/LoopFeatures.h"
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Analysis/LoopInfoImpl.h"
@@ -682,6 +684,58 @@ PreservedAnalyses PrintLoopPass::run(Loop &L, AnalysisManager<Loop> &) {
       OS << "Printing <null> block";
   return PreservedAnalyses::all();
 }
+
+PrintLoopFeaturesPass::PrintLoopFeaturesPass() : OS(dbgs()) {}
+PrintLoopFeaturesPass::PrintLoopFeaturesPass(raw_ostream &OS, const std::string &PassName)
+    : OS(OS), PassName(PassName) {}
+
+void PrintLoopFeaturesPass::CountIntToFloatCast(const IVUsers &IU) {
+  NumIVUsers = 0;
+  NumIntToFloatCast = 0;
+  for (IVUsers::const_iterator UI = IU.begin(), E = IU.end();
+       UI != E; ) {
+    IVUsers::const_iterator CandidateUI = UI;
+    ++UI;
+    Type *DestTy = nullptr;
+    if (UIToFPInst *UCast = dyn_cast<UIToFPInst>(CandidateUI->getUser())) {
+      DestTy = UCast->getDestTy();
+    }
+    else if (SIToFPInst *SCast = dyn_cast<SIToFPInst>(CandidateUI->getUser())) {
+      DestTy = SCast->getDestTy();
+    }
+    if (DestTy) {
+      NumIntToFloatCast++;
+    }
+    NumIVUsers++;
+  }
+}
+
+unsigned PrintLoopFeaturesPass::CountTermBrBlocks(const Loop& L) {
+  unsigned NumTermBrBlocks = 0;
+  SmallVector<BasicBlock*, 8> ExitingBlocks;
+  L.getExitingBlocks(ExitingBlocks);
+
+  for (BasicBlock *ExitingBlock : ExitingBlocks) {
+
+    BranchInst *TermBr = dyn_cast<BranchInst>(ExitingBlock->getTerminator());
+    if (TermBr)
+      if (!TermBr->isUnconditional() && isa<ICmpInst>(TermBr->getCondition()))
+        NumTermBrBlocks++;
+  }
+  return NumTermBrBlocks;
+}
+
+PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM) {
+  auto &IU = AM.getResult<IVUsersAnalysis>(L);
+  CountIntToFloatCast(IU);
+  LoopFeatures Features(PassName, L.LoopId, NumIVUsers,
+                        L.isLoopSimplifyForm(), L.empty(), NumIntToFloatCast,
+                        L.getLoopPreheader(), CountTermBrBlocks(L),
+                        L.getLoopLatch()->getTerminator()->getOpcode());
+  OS << Features.ToJSON();
+  return PreservedAnalyses::all();
+}
+
 
 //===----------------------------------------------------------------------===//
 // LoopInfo implementation

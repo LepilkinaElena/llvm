@@ -13,7 +13,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/IR/LoopFeatures.h"
+
 #include "llvm/Analysis/IVUsers.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/LoopPassManager.h"
@@ -58,86 +58,61 @@ public:
 };
 
 char PrintLoopPassWrapper::ID = 0;
+}
+
+namespace {
 
 /// PrintFeaturesLoopPass - Print features corresponding to a Loop.
 ///
-class PrintFeaturesLoopPass : public LoopPass,
-                              public PrintFeaturesPass {
-  unsigned NumIVUsers;
-  unsigned NumIntToFloatCast;
+class PrintLoopFeaturesPassWrapper : public LoopPass {
+  PrintLoopFeaturesPass P;
+
 public:
   static char ID;
-  PrintFeaturesLoopPass() : LoopPass(ID), PrintFeaturesPass(dbgs(), "") {
-    initializePrintFeaturesLoopPassPass(*PassRegistry::getPassRegistry());
-  }
-  PrintFeaturesLoopPass(raw_ostream &OS, const std::string &PassName)
-      : LoopPass(ID), PrintFeaturesPass(OS, PassName) {
-    initializePrintFeaturesLoopPassPass(*PassRegistry::getPassRegistry());
-  }
+  PrintLoopFeaturesPassWrapper();
+  PrintLoopFeaturesPassWrapper(raw_ostream &OS, const std::string &PassName);
 
-  void getAnalysisUsage(AnalysisUsage &AU) const override {
-    AU.addRequired<IVUsersWrapperPass>();
-    AU.addPreserved<IVUsersWrapperPass>();
-    //AU.setPreservesAll();
-  }
+  void getAnalysisUsage(AnalysisUsage &AU) const override; 
 
-  bool runOnLoop(Loop *L, LPPassManager &) override {
-    auto &IU = getAnalysis<IVUsersWrapperPass>().getIU();
-    CountIntToFloatCast(IU);
-    LoopFeatures Features(PassName, L->LoopId, NumIVUsers,
-                          L->isLoopSimplifyForm(), L->empty(), NumIntToFloatCast,
-                          L->getLoopPreheader(), CountTermBrBlocks(L),
-                          L->getLoopLatch()->getTerminator()->getOpcode());
-    run(Features);
-    return false;
-  }
+  bool runOnLoop(Loop *L, LPPassManager &) override;
 
-  void CountIntToFloatCast(const IVUsers &IU) {
-    NumIVUsers = 0;
-    NumIntToFloatCast = 0;
-    for (IVUsers::const_iterator UI = IU.begin(), E = IU.end();
-         UI != E; ) {
-      IVUsers::const_iterator CandidateUI = UI;
-      ++UI;
-      Type *DestTy = nullptr;
-      if (UIToFPInst *UCast = dyn_cast<UIToFPInst>(CandidateUI->getUser())) {
-        DestTy = UCast->getDestTy();
-      }
-      else if (SIToFPInst *SCast = dyn_cast<SIToFPInst>(CandidateUI->getUser())) {
-        DestTy = SCast->getDestTy();
-      }
-      if (DestTy) {
-        NumIntToFloatCast++;
-      }
-      NumIVUsers++;
-    }
-  }
-
-  unsigned CountTermBrBlocks(const Loop* L) {
-    unsigned NumTermBrBlocks = 0;
-    SmallVector<BasicBlock*, 8> ExitingBlocks;
-    L->getExitingBlocks(ExitingBlocks);
-
-    for (BasicBlock *ExitingBlock : ExitingBlocks) {
-
-      BranchInst *TermBr = dyn_cast<BranchInst>(ExitingBlock->getTerminator());
-      if (TermBr)
-        if (!TermBr->isUnconditional() && isa<ICmpInst>(TermBr->getCondition()))
-          NumTermBrBlocks++;
-    }
-    return NumTermBrBlocks;
-  }
 };
-
-char PrintFeaturesLoopPass::ID = 0;
-
 }
 
-INITIALIZE_PASS_BEGIN(PrintFeaturesLoopPass, "loop-features",
+char PrintLoopFeaturesPassWrapper::ID = 0;
+INITIALIZE_PASS_BEGIN(PrintLoopFeaturesPassWrapper, "loop-features",
                       "Loop Features Printing Pass", false, true)
 INITIALIZE_PASS_DEPENDENCY(IVUsersWrapperPass)
-INITIALIZE_PASS_END(PrintFeaturesLoopPass, "loop-features",
-                    "Loop Strength Reduction", false, true)
+INITIALIZE_PASS_END(PrintLoopFeaturesPassWrapper, "loop-features",
+                    "Loop Features Printing Pass", false, true)
+
+Pass *llvm::createPrintLoopFeaturesPass() { return new PrintLoopFeaturesPassWrapper(); }
+
+PrintLoopFeaturesPassWrapper::PrintLoopFeaturesPassWrapper() : LoopPass(ID) {
+  initializePrintLoopFeaturesPassWrapperPass(*PassRegistry::getPassRegistry());
+}
+
+PrintLoopFeaturesPassWrapper::PrintLoopFeaturesPassWrapper(raw_ostream &OS, const std::string &PassName)
+    : LoopPass(ID), P(OS, PassName) {
+  initializePrintLoopFeaturesPassWrapperPass(*PassRegistry::getPassRegistry());
+}
+
+void PrintLoopFeaturesPassWrapper::getAnalysisUsage(AnalysisUsage &AU) const {
+  AU.addRequired<IVUsersWrapperPass>();
+  //AU.addPreserved<IVUsersWrapperPass>();*/
+  AU.setPreservesAll();
+}
+
+bool PrintLoopFeaturesPassWrapper::runOnLoop(Loop *L, LPPassManager &) {
+  auto BBI = find_if(L->blocks().begin(), L->blocks().end(),
+                     [](BasicBlock *BB) { return BB; });
+  if (BBI != L->blocks().end() &&
+      isFunctionInPrintList((*BBI)->getParent()->getName())) {
+    LoopAnalysisManager DummyLAM;
+    P.run(*L, DummyLAM);
+  }
+  return false;
+}
 
 //===----------------------------------------------------------------------===//
 // LPPassManager
@@ -361,7 +336,7 @@ Pass *LoopPass::createPrinterPass(raw_ostream &O,
 
 Pass *LoopPass::createFeaturesPrinterPass(raw_ostream &O,
                                           const std::string &PassName) const {
-  return new PrintFeaturesLoopPass(O, PassName);
+  return new PrintLoopFeaturesPassWrapper(O, PassName);
 }
 
 // Check if this pass is suitable for the current LPPassManager, if

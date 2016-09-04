@@ -56,6 +56,7 @@ class Loop;
 class MDNode;
 class PHINode;
 class raw_ostream;
+class IVUsers;
 template<class N> class DominatorTreeBase;
 template<class N, class M> class LoopInfoBase;
 template<class N, class M> class LoopBase;
@@ -854,6 +855,24 @@ public:
 
   PreservedAnalyses run(Loop &L, AnalysisManager<Loop> &);
 };
+
+class PrintLoopFeaturesPass : public PassInfoMixin<PrintLoopFeaturesPass> {
+  raw_ostream &OS;
+  std::string PassName;
+  unsigned NumIVUsers;
+  unsigned NumIntToFloatCast;
+public:
+  PrintLoopFeaturesPass();
+  PrintLoopFeaturesPass(raw_ostream &OS, const std::string &PassName);
+  PreservedAnalyses run(Loop &L, AnalysisManager<Loop> &);
+
+  
+  void CountIntToFloatCast(const IVUsers &IU);
+
+  unsigned CountTermBrBlocks(const Loop& L);
+};
+
+Pass *createPrintLoopFeaturesPass();
 
 } // End llvm namespace
 
