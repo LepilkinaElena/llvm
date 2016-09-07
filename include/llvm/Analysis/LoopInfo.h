@@ -872,8 +872,6 @@ public:
   unsigned CountTermBrBlocks(const Loop& L);
 };
 
-Pass *createPrintLoopFeaturesPass();
-
 } // End llvm namespace
 
 #endif

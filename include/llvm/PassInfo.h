@@ -137,7 +137,7 @@ private:
   void operator=(const PassInfo &) = delete;
   PassInfo(const PassInfo &) = delete;
 };
-
+Pass *createPrintLoopFeaturesPass();
 }
 
 #endif

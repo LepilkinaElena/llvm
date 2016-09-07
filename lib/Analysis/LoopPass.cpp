@@ -109,6 +109,8 @@ bool PrintLoopFeaturesPassWrapper::runOnLoop(Loop *L, LPPassManager &) {
   if (BBI != L->blocks().end() &&
       isFunctionInPrintList((*BBI)->getParent()->getName())) {
     LoopAnalysisManager DummyLAM;
+    auto &IU = getAnalysis<IVUsersWrapperPass>().getIU();
+    P.CountIntToFloatCast(IU);
     P.run(*L, DummyLAM);
   }
   return false;
@@ -239,7 +241,7 @@ bool LPPassManager::runOnFunction(Function &F) {
 
     // Run all passes on the current Loop.
     for (unsigned Index = 0; Index < getNumContainedPasses(); ++Index) {
-      LoopPass *P = getContainedPass(Index);
+      LoopPass *P = getContainedPass(Index); 
 
       dumpPassInfo(P, EXECUTION_MSG, ON_LOOP_MSG,
                    CurrentLoop->getHeader()->getName());

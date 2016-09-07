@@ -658,18 +658,19 @@ void PMTopLevelManager::schedulePass(Pass *P) {
 
   // TODO : Allocate function manager for this pass, other wise required set
   // may be inserted into previous function manager
-
+  const PassInfo *PI = findAnalysisPassInfo(P->getPassID());
   // Give pass a chance to prepare the stage.
   P->preparePassManager(activeStack);
 
   // If P is an analysis pass and it is available then do not
   // generate the analysis again. Stale analysis info should not be
   // available at this point.
-  const PassInfo *PI = findAnalysisPassInfo(P->getPassID());
+  
   if (PI && PI->isAnalysis() && findAnalysisPass(P->getPassID())) {
     delete P;
     return;
   }
+
 
   AnalysisUsage *AnUsage = findAnalysisUsage(P);
 
@@ -737,7 +738,7 @@ void PMTopLevelManager::schedulePass(Pass *P) {
     return;
   }
 
-  raw_ostream &FeaturesOutput = FeaturesFile.empty() ? dbgs() : getFeaturesOutput(FeaturesFile);
+  
 
   if (PI && !PI->isAnalysis() && ShouldPrintBeforePass(PI)) {
     Pass *PP = P->createPrinterPass(
@@ -745,10 +746,11 @@ void PMTopLevelManager::schedulePass(Pass *P) {
     PP->assignPassManager(activeStack, getTopLevelPassManagerType());
   }
 
+  raw_ostream &FeaturesOutput = FeaturesFile.empty() ? dbgs() : getFeaturesOutput(FeaturesFile);
   if (PI && !PI->isAnalysis() && ShouldPrintFeaturesBeforePass(PI)) {
     Pass *PP = P->createFeaturesPrinterPass(
       FeaturesOutput, std::string("Before ") + P->getPassName());
-    PP->assignPassManager(activeStack, getTopLevelPassManagerType());
+    schedulePass(PP);
   }
 
   // Add the requested pass to the best available pass manager.
@@ -763,7 +765,7 @@ void PMTopLevelManager::schedulePass(Pass *P) {
   if (PI && !PI->isAnalysis() && ShouldPrintFeaturesAfterPass(PI)) {
     Pass *PP = P->createFeaturesPrinterPass(
       FeaturesOutput, std::string("After ") + P->getPassName());
-    PP->assignPassManager(activeStack, getTopLevelPassManagerType());
+    schedulePass(PP);
   }
 }
 
@@ -1014,7 +1016,6 @@ void PMDataManager::removeDeadPasses(Pass *P, StringRef Msg,
 void PMDataManager::freePass(Pass *P, StringRef Msg,
                              enum PassDebuggingString DBG_STR) {
   dumpPassInfo(P, FREEING_MSG, DBG_STR, Msg);
-
   {
     // If the pass crashes releasing memory, remember this.
     PassManagerPrettyStackEntry X(P);

@@ -52,8 +52,6 @@ add_llvm_library(LLVMSupport
   Error.cpp
   ErrorHandling.cpp
   FileUtilities.cpp
-  FeatureLogger.cpp
-  Features.cpp
   FileOutputBuffer.cpp
   FoldingSet.cpp
   FormattedStream.cpp
@@ -67,7 +65,6 @@ add_llvm_library(LLVMSupport
   LineIterator.cpp
   Locale.cpp
   LockFileManager.cpp
-  LoopFeatures.cpp
   ManagedStatic.cpp
   MathExtras.cpp
   MemoryBuffer.cpp

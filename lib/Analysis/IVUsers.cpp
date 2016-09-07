@@ -339,7 +339,10 @@ void IVUsersWrapperPass::print(raw_ostream &OS, const Module *M) const {
   IU->print(OS, M);
 }
 
-void IVUsersWrapperPass::releaseMemory() { IU->releaseMemory(); }
+void IVUsersWrapperPass::releaseMemory() { 
+  if (IU) 
+    IU->releaseMemory(); 
+}
 
 /// getReplacementExpr - Return a SCEV expression which computes the
 /// value of the OperandValToReplace.

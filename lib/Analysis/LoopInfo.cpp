@@ -726,8 +726,8 @@ unsigned PrintLoopFeaturesPass::CountTermBrBlocks(const Loop& L) {
 }
 
 PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM) {
-  auto &IU = AM.getResult<IVUsersAnalysis>(L);
-  CountIntToFloatCast(IU);
+  //auto &IU = AM.getResult<IVUsersAnalysis>(L);
+  //CountIntToFloatCast(IU);
   LoopFeatures Features(PassName, L.LoopId, NumIVUsers,
                         L.isLoopSimplifyForm(), L.empty(), NumIntToFloatCast,
                         L.getLoopPreheader(), CountTermBrBlocks(L),
