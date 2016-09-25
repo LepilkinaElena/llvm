@@ -540,9 +540,12 @@ static TimingInfo *TheTimeInfo;
 
 raw_ostream &PMTopLevelManager::getFeaturesOutput(std::string FileName) {
   std::error_code EC;
-  static raw_fd_ostream FeaturesOutput(FileName, EC,
-                         sys::fs::OpenFlags::F_Text);
-  return FeaturesOutput;
+  static raw_fd_ostream FeaturesOutput(FileName, EC, sys::fs::F_Append | sys::fs::F_Text);
+  if (!EC)
+    return FeaturesOutput;
+  errs() << "Error opening features-output-file '"
+    << FileName << " for appending!\n";
+  return *llvm::make_unique<raw_fd_ostream>(2, false); // stderr.
 }
 
 /// Initialize top level manager. Create first pass manager.
@@ -737,8 +740,6 @@ void PMTopLevelManager::schedulePass(Pass *P) {
     DM->recordAvailableAnalysis(IP);
     return;
   }
-
-  
 
   if (PI && !PI->isAnalysis() && ShouldPrintBeforePass(PI)) {
     Pass *PP = P->createPrinterPass(
