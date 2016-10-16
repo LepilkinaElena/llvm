@@ -857,13 +857,13 @@ public:
 };
 
 class PrintLoopFeaturesPass : public PassInfoMixin<PrintLoopFeaturesPass> {
-  raw_ostream &OS;
+  std::string FileName;
   std::string PassName;
   unsigned NumIVUsers;
   unsigned NumIntToFloatCast;
 public:
   PrintLoopFeaturesPass();
-  PrintLoopFeaturesPass(raw_ostream &OS, const std::string &PassName);
+  PrintLoopFeaturesPass(const std::string &FileName, const std::string &PassName);
   PreservedAnalyses run(Loop &L, AnalysisManager<Loop> &);
 
   

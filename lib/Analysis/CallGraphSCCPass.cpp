@@ -633,9 +633,9 @@ Pass *CallGraphSCCPass::createPrinterPass(raw_ostream &O,
   return new PrintCallGraphPass(Banner, O);
 }
 
-Pass *CallGraphSCCPass::createFeaturesPrinterPass(raw_ostream &O,
+Pass *CallGraphSCCPass::createFeaturesPrinterPass(const std::string &FileName,
                                                   const std::string &PassName) const {
-  return createPrintFeaturesModulePass(O, PassName);
+  return createPrintFeaturesModulePass(FileName, PassName);
 }
 
 bool CallGraphSCCPass::skipSCC(CallGraphSCC &SCC) const {

@@ -18,6 +18,7 @@
 #include "llvm/Analysis/IVUsers.h"
 #include "llvm/IR/LoopFeatures.h"
 #include "llvm/ADT/DepthFirstIterator.h"
+#include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Analysis/LoopInfoImpl.h"
 #include "llvm/Analysis/LoopIterator.h"
@@ -685,9 +686,9 @@ PreservedAnalyses PrintLoopPass::run(Loop &L, AnalysisManager<Loop> &) {
   return PreservedAnalyses::all();
 }
 
-PrintLoopFeaturesPass::PrintLoopFeaturesPass() : OS(dbgs()) {}
-PrintLoopFeaturesPass::PrintLoopFeaturesPass(raw_ostream &OS, const std::string &PassName)
-    : OS(OS), PassName(PassName) {}
+PrintLoopFeaturesPass::PrintLoopFeaturesPass() {}
+PrintLoopFeaturesPass::PrintLoopFeaturesPass(const std::string &File, const std::string &PassName)
+    : FileName(File), PassName(PassName) {}
 
 void PrintLoopFeaturesPass::CountIntToFloatCast(const IVUsers &IU) {
   NumIVUsers = 0;
@@ -728,11 +729,14 @@ unsigned PrintLoopFeaturesPass::CountTermBrBlocks(const Loop& L) {
 PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM) {
   //auto &IU = AM.getResult<IVUsersAnalysis>(L);
   //CountIntToFloatCast(IU);
-  LoopFeatures Features(PassName, L.LoopId, NumIVUsers,
+  LoopFeatures Features(PassName, hash_value(hash_value(L.getLoopID())), NumIVUsers,
                         L.isLoopSimplifyForm(), L.empty(), NumIntToFloatCast,
                         L.getLoopPreheader(), CountTermBrBlocks(L),
                         L.getLoopLatch()->getTerminator()->getOpcode());
-  OS << Features.ToJSON();
+  std::string HashNamePart = std::to_string(hash_value(hash_value(L.getLoopID()))) + ".";
+  raw_ostream &FeaturesOutput = FileName.empty() ? dbgs() : 
+                                Features::getFeaturesOutput(HashNamePart + FileName);
+  FeaturesOutput << Features.ToJSON();
   return PreservedAnalyses::all();
 }
 

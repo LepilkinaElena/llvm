@@ -130,7 +130,7 @@ public:
   virtual Pass *createPrinterPass(raw_ostream &O,
                                   const std::string &Banner) const = 0;
 
-  virtual Pass *createFeaturesPrinterPass(raw_ostream &O,
+  virtual Pass *createFeaturesPrinterPass(const std::string &FileName,
                           const std::string &PassName) const = 0;
 
   /// Each pass is responsible for assigning a pass manager to itself.
@@ -242,7 +242,7 @@ public:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override;
 
-  Pass *createFeaturesPrinterPass(raw_ostream &O,
+  Pass *createFeaturesPrinterPass(const std::string &FileName,
                           const std::string &PassName) const override;
 
   /// runOnModule - Virtual method overriden by subclasses to process the module
@@ -310,7 +310,7 @@ public:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override;
 
-  Pass *createFeaturesPrinterPass(raw_ostream &O,
+  Pass *createFeaturesPrinterPass(const std::string &FileName,
                           const std::string &PassName) const override;
 
   /// runOnFunction - Virtual method overriden by subclasses to do the
@@ -350,7 +350,7 @@ public:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override;
 
-  Pass *createFeaturesPrinterPass(raw_ostream &O,
+  Pass *createFeaturesPrinterPass(const std::string &FileName,
                           const std::string &PassName) const override;
 
   using llvm::Pass::doInitialization;
@@ -384,12 +384,12 @@ protected:
 };
 
 class PrintFeaturesPass {
-  raw_ostream &OS;
+  std::string FileName;
 protected:
   std::string PassName;
 public:
-  PrintFeaturesPass(raw_ostream &OS, const std::string &PassName)
-      : OS(OS), PassName(PassName) {}
+  PrintFeaturesPass(const std::string &FileName, const std::string &PassName)
+      : FileName(FileName), PassName(PassName) {}
   void run(Features &StaticFeatures);
 };
 

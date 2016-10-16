@@ -38,7 +38,7 @@ ModulePass *createPrintModulePass(raw_ostream &OS,
                                   const std::string &Banner = "",
                                   bool ShouldPreserveUseListOrder = false);
 
-ModulePass *createPrintFeaturesModulePass(raw_ostream &OS,
+ModulePass *createPrintFeaturesModulePass(const std::string &FileName,
                                           const std::string &PassName = "");
 
 /// \brief Create and return a pass that prints functions to the specified
@@ -46,7 +46,7 @@ ModulePass *createPrintFeaturesModulePass(raw_ostream &OS,
 FunctionPass *createPrintFunctionPass(raw_ostream &OS,
                                       const std::string &Banner = "");
 
-FunctionPass *createPrintFeaturesFunctionPass(raw_ostream &OS,
+FunctionPass *createPrintFeaturesFunctionPass(const std::string &FileName,
                                               const std::string &PassName = "");
 
 /// \brief Create and return a pass that writes the BB to the specified
@@ -54,7 +54,7 @@ FunctionPass *createPrintFeaturesFunctionPass(raw_ostream &OS,
 BasicBlockPass *createPrintBasicBlockPass(raw_ostream &OS,
                                           const std::string &Banner = "");
 
-BasicBlockPass *createPrintFeaturesBasicBlockPass(raw_ostream &OS,
+BasicBlockPass *createPrintFeaturesBasicBlockPass(const std::string &FileName,
                                                 const std::string &PassName = "");
 
 /// Print out a name of an LLVM value without any prefixes.

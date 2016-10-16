@@ -283,9 +283,9 @@ public:
     return createPrintFunctionPass(O, Banner);
   }
 
-  Pass *createFeaturesPrinterPass(raw_ostream &O,
+  Pass *createFeaturesPrinterPass(const std::string &FileName,
                                   const std::string &PassName) const {
-    return createPrintFeaturesFunctionPass(O, PassName);
+    return createPrintFeaturesFunctionPass(FileName, PassName);
   }
 
   // Prepare for running an on the fly pass, freeing memory if needed
@@ -356,9 +356,9 @@ public:
     return createPrintModulePass(O, Banner);
   }
 
-  Pass *createFeaturesPrinterPass(raw_ostream &O,
+  Pass *createFeaturesPrinterPass(const std::string &FileName,
                                   const std::string &PassName) const {
-    return createPrintFeaturesModulePass(O, PassName);
+    return createPrintFeaturesModulePass(FileName, PassName);
   }
 
   /// run - Execute all of the passes scheduled for execution.  Keep track of
@@ -451,9 +451,9 @@ public:
     return createPrintModulePass(O, Banner);
   }
 
-  Pass *createFeaturesPrinterPass(raw_ostream &O,
+  Pass *createFeaturesPrinterPass(const std::string &FileName,
                                   const std::string &PassName) const {
-    return createPrintFeaturesModulePass(O, PassName);
+    return createPrintFeaturesModulePass(FileName, PassName);
   }
 
   /// run - Execute all of the passes scheduled for execution.  Keep track of
@@ -538,15 +538,7 @@ static TimingInfo *TheTimeInfo;
 //===----------------------------------------------------------------------===//
 // PMTopLevelManager implementation
 
-raw_ostream &PMTopLevelManager::getFeaturesOutput(std::string FileName) {
-  std::error_code EC;
-  static raw_fd_ostream FeaturesOutput(FileName, EC, sys::fs::F_Append | sys::fs::F_Text);
-  if (!EC)
-    return FeaturesOutput;
-  errs() << "Error opening features-output-file '"
-    << FileName << " for appending!\n";
-  return *llvm::make_unique<raw_fd_ostream>(2, false); // stderr.
-}
+
 
 /// Initialize top level manager. Create first pass manager.
 PMTopLevelManager::PMTopLevelManager(PMDataManager *PMDM) {
@@ -747,10 +739,9 @@ void PMTopLevelManager::schedulePass(Pass *P) {
     PP->assignPassManager(activeStack, getTopLevelPassManagerType());
   }
 
-  raw_ostream &FeaturesOutput = FeaturesFile.empty() ? dbgs() : getFeaturesOutput(FeaturesFile);
   if (PI && !PI->isAnalysis() && ShouldPrintFeaturesBeforePass(PI)) {
     Pass *PP = P->createFeaturesPrinterPass(
-      FeaturesOutput, std::string("Before ") + P->getPassName());
+      FeaturesFile, std::string("Before ") + P->getPassName());
     schedulePass(PP);
   }
 
@@ -765,7 +756,7 @@ void PMTopLevelManager::schedulePass(Pass *P) {
 
   if (PI && !PI->isAnalysis() && ShouldPrintFeaturesAfterPass(PI)) {
     Pass *PP = P->createFeaturesPrinterPass(
-      FeaturesOutput, std::string("After ") + P->getPassName());
+      FeaturesFile, std::string("After ") + P->getPassName());
     schedulePass(PP);
   }
 }

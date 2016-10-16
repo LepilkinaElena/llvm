@@ -70,7 +70,7 @@ class PrintLoopFeaturesPassWrapper : public LoopPass {
 public:
   static char ID;
   PrintLoopFeaturesPassWrapper();
-  PrintLoopFeaturesPassWrapper(raw_ostream &OS, const std::string &PassName);
+  PrintLoopFeaturesPassWrapper(const std::string &FileName, const std::string &PassName);
 
   void getAnalysisUsage(AnalysisUsage &AU) const override; 
 
@@ -92,8 +92,8 @@ PrintLoopFeaturesPassWrapper::PrintLoopFeaturesPassWrapper() : LoopPass(ID) {
   initializePrintLoopFeaturesPassWrapperPass(*PassRegistry::getPassRegistry());
 }
 
-PrintLoopFeaturesPassWrapper::PrintLoopFeaturesPassWrapper(raw_ostream &OS, const std::string &PassName)
-    : LoopPass(ID), P(OS, PassName) {
+PrintLoopFeaturesPassWrapper::PrintLoopFeaturesPassWrapper(const std::string &FileName, const std::string &PassName)
+    : LoopPass(ID), P(FileName, PassName) {
   initializePrintLoopFeaturesPassWrapperPass(*PassRegistry::getPassRegistry());
 }
 
@@ -336,9 +336,9 @@ Pass *LoopPass::createPrinterPass(raw_ostream &O,
   return new PrintLoopPassWrapper(O, Banner);
 }
 
-Pass *LoopPass::createFeaturesPrinterPass(raw_ostream &O,
+Pass *LoopPass::createFeaturesPrinterPass(const std::string &FileName,
                                           const std::string &PassName) const {
-  return new PrintLoopFeaturesPassWrapper(O, PassName);
+  return new PrintLoopFeaturesPassWrapper(FileName, PassName);
 }
 
 // Check if this pass is suitable for the current LPPassManager, if

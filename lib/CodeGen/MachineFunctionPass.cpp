@@ -36,9 +36,9 @@ Pass *MachineFunctionPass::createPrinterPass(raw_ostream &O,
   return createMachineFunctionPrinterPass(O, Banner);
 }
 
-Pass *MachineFunctionPass::createFeaturesPrinterPass(raw_ostream &O,
+Pass *MachineFunctionPass::createFeaturesPrinterPass(const std::string &FileName,
                                                      const std::string &PassName) const {
-  return createPrintFeaturesFunctionPass(O, PassName);
+  return createPrintFeaturesFunctionPass(FileName, PassName);
 }
 
 bool MachineFunctionPass::runOnFunction(Function &F) {

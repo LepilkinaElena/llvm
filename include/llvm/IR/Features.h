@@ -10,7 +10,7 @@
 #include <string>
 
 namespace llvm {
-
+class raw_ostream;
 class Features {
 protected:
   std::string PassName;
@@ -19,6 +19,7 @@ public:
   virtual ~Features();
   std::string BooleanToString (bool Feature) const;
   virtual std::string ToJSON() const;
+  static raw_ostream &getFeaturesOutput(std::string FileName);
 };
 
 }

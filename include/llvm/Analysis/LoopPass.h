@@ -35,7 +35,7 @@ public:
   Pass *createPrinterPass(raw_ostream &O,
                           const std::string &Banner) const override;
 
-  Pass *createFeaturesPrinterPass(raw_ostream &O,
+  Pass *createFeaturesPrinterPass(const std::string &FileName,
                           const std::string &PassName) const override;
 
   // runOnLoop - This method should be implemented by the subclass to perform

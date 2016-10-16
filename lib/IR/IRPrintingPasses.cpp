@@ -118,9 +118,9 @@ class PrintFeaturesModulePass : public ModulePass,
                                 public PrintFeaturesPass {
 public:
   static char ID;
-  PrintFeaturesModulePass() : ModulePass(ID), PrintFeaturesPass(dbgs(), "") {}
-  PrintFeaturesModulePass(raw_ostream &OS, const std::string &PassName)
-      : ModulePass(ID), PrintFeaturesPass(OS, PassName) {}
+  PrintFeaturesModulePass() : ModulePass(ID), PrintFeaturesPass("", "") {}
+  PrintFeaturesModulePass(const std::string &FileName, const std::string &PassName)
+      : ModulePass(ID), PrintFeaturesPass(FileName, PassName) {}
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesAll();
@@ -137,9 +137,9 @@ class PrintFeaturesFunctionPass : public FunctionPass,
                                   public PrintFeaturesPass {
 public:
   static char ID;
-  PrintFeaturesFunctionPass() : FunctionPass(ID), PrintFeaturesPass(dbgs(), "") {}
-  PrintFeaturesFunctionPass(raw_ostream &OS, const std::string &PassName)
-      : FunctionPass(ID), PrintFeaturesPass(OS, PassName) {}
+  PrintFeaturesFunctionPass() : FunctionPass(ID), PrintFeaturesPass("", "") {}
+  PrintFeaturesFunctionPass(const std::string &FileName, const std::string &PassName)
+      : FunctionPass(ID), PrintFeaturesPass(FileName, PassName) {}
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesAll();
@@ -156,9 +156,9 @@ class PrintFeaturesBasicBlockPass : public BasicBlockPass,
                                     public PrintFeaturesPass {
 public:
   static char ID;
-  PrintFeaturesBasicBlockPass() : BasicBlockPass(ID), PrintFeaturesPass(dbgs(), "") {}
-  PrintFeaturesBasicBlockPass(raw_ostream &OS, const std::string &PassName)
-      : BasicBlockPass(ID), PrintFeaturesPass(OS, PassName) {}
+  PrintFeaturesBasicBlockPass() : BasicBlockPass(ID), PrintFeaturesPass("", "") {}
+  PrintFeaturesBasicBlockPass(const std::string &FileName, const std::string &PassName)
+      : BasicBlockPass(ID), PrintFeaturesPass(FileName, PassName) {}
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesAll();
@@ -209,17 +209,17 @@ BasicBlockPass *llvm::createPrintBasicBlockPass(llvm::raw_ostream &OS,
   return new PrintBasicBlockPass(OS, Banner);
 }
 
-ModulePass *llvm::createPrintFeaturesModulePass(llvm::raw_ostream &OS,
+ModulePass *llvm::createPrintFeaturesModulePass(const std::string &FileName,
                                         const std::string &PassName) {
-  return new PrintFeaturesModulePass(OS, PassName);
+  return new PrintFeaturesModulePass(FileName, PassName);
 }
 
-FunctionPass *llvm::createPrintFeaturesFunctionPass(llvm::raw_ostream &OS,
+FunctionPass *llvm::createPrintFeaturesFunctionPass(const std::string &FileName,
                                                     const std::string &PassName) {
-  return new PrintFeaturesFunctionPass(OS, PassName);
+  return new PrintFeaturesFunctionPass(FileName, PassName);
 }
 
-BasicBlockPass *llvm::createPrintFeaturesBasicBlockPass(llvm::raw_ostream &OS,
+BasicBlockPass *llvm::createPrintFeaturesBasicBlockPass(const std::string &FileName,
                                                         const std::string &PassName) {
-  return new PrintFeaturesBasicBlockPass(OS, PassName);
+  return new PrintFeaturesBasicBlockPass(FileName, PassName);
 }

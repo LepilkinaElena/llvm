@@ -44,9 +44,9 @@ Pass *ModulePass::createPrinterPass(raw_ostream &O,
   return createPrintModulePass(O, Banner);
 }
 
-Pass *ModulePass::createFeaturesPrinterPass(raw_ostream &O,
+Pass *ModulePass::createFeaturesPrinterPass(const std::string &FileName,
                                             const std::string &PassName) const {
-    return createPrintFeaturesModulePass(O, PassName);
+    return createPrintFeaturesModulePass(FileName, PassName);
 }
 
 PassManagerType ModulePass::getPotentialPassManagerType() const {
@@ -148,9 +148,9 @@ Pass *FunctionPass::createPrinterPass(raw_ostream &O,
   return createPrintFunctionPass(O, Banner);
 }
 
-Pass *FunctionPass::createFeaturesPrinterPass(raw_ostream &O,
+Pass *FunctionPass::createFeaturesPrinterPass(const std::string &FileName,
                                             const std::string &PassName) const {
-    return createPrintFeaturesFunctionPass(O, PassName);
+    return createPrintFeaturesFunctionPass(FileName, PassName);
 }
 
 PassManagerType FunctionPass::getPotentialPassManagerType() const {
@@ -178,9 +178,9 @@ Pass *BasicBlockPass::createPrinterPass(raw_ostream &O,
   return createPrintBasicBlockPass(O, Banner);
 }
 
-Pass *BasicBlockPass::createFeaturesPrinterPass(raw_ostream &O,
+Pass *BasicBlockPass::createFeaturesPrinterPass(const std::string &FileName,
                                                 const std::string &PassName) const {
-    return createPrintFeaturesBasicBlockPass(O, PassName);
+    return createPrintFeaturesBasicBlockPass(FileName, PassName);
 }
 
 bool BasicBlockPass::doInitialization(Function &) {
@@ -319,5 +319,5 @@ AnalysisUsage &AnalysisUsage::addRequiredTransitiveID(char &ID) {
 }
 
 void PrintFeaturesPass::run(Features &StaticFeatures) {
-  OS << StaticFeatures.ToJSON();
+  dbgs() << StaticFeatures.ToJSON();
 }

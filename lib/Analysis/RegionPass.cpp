@@ -215,9 +215,9 @@ class PrintFeaturesRegionPass : public RegionPass,
                                 public PrintFeaturesPass {
 public:
   static char ID;
-  PrintFeaturesRegionPass() : RegionPass(ID), PrintFeaturesPass(dbgs(), "") {}
-  PrintFeaturesRegionPass(raw_ostream &OS, const std::string &PassName)
-      : RegionPass(ID), PrintFeaturesPass(OS, PassName) {}
+  PrintFeaturesRegionPass() : RegionPass(ID), PrintFeaturesPass("", "") {}
+  PrintFeaturesRegionPass(const std::string &FileName, const std::string &PassName)
+      : RegionPass(ID), PrintFeaturesPass(FileName, PassName) {}
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesAll();
@@ -301,7 +301,7 @@ Pass *RegionPass::createPrinterPass(raw_ostream &O,
   return new PrintRegionPass(Banner, O);
 }
 
-Pass *RegionPass::createFeaturesPrinterPass(raw_ostream &O,
+Pass *RegionPass::createFeaturesPrinterPass(const std::string &FileName,
                                             const std::string &PassName) const {
-  return new PrintFeaturesRegionPass(O, PassName);
+  return new PrintFeaturesRegionPass(FileName, PassName);
 }
