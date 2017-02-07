@@ -729,11 +729,11 @@ unsigned PrintLoopFeaturesPass::CountTermBrBlocks(const Loop& L) {
 PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM) {
   //auto &IU = AM.getResult<IVUsersAnalysis>(L);
   //CountIntToFloatCast(IU);
-  LoopFeatures Features(PassName, hash_value(hash_value(L.getLoopID())), NumIVUsers,
+  LoopFeatures Features(PassName, hash_value(L.LoopId), NumIVUsers,
                         L.isLoopSimplifyForm(), L.empty(), NumIntToFloatCast,
                         L.getLoopPreheader(), CountTermBrBlocks(L),
                         L.getLoopLatch()->getTerminator()->getOpcode());
-  std::string HashNamePart = std::to_string(hash_value(hash_value(L.getLoopID()))) + ".";
+  std::string HashNamePart = std::to_string(hash_value(L.LoopId)) + ".";
   raw_ostream &FeaturesOutput = FileName.empty() ? dbgs() : 
                                 Features::getFeaturesOutput(HashNamePart + FileName);
   FeaturesOutput << Features.ToJSON();

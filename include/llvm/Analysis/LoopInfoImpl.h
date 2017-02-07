@@ -191,13 +191,15 @@ addBasicBlockToLoop(BlockT *NewBB, LoopInfoBase<BlockT, LoopT> &LIB) {
   assert(!LIB[NewBB] && "BasicBlock already in the loop!");
 
   LoopT *L = static_cast<LoopT *>(this);
-
+  
   // Add the loop mapping to the LoopInfo object...
   LIB.BBMap[NewBB] = L;
 
   // Add the basic block to this loop and all parent loops...
   while (L) {
     L->addBlockEntry(NewBB);
+    //L->dump();
+    NewBB->addLoopID(L->LoopId);
     L = L->getParentLoop();
   }
 }

@@ -87,7 +87,7 @@ class LoopBase {
 public:
   uint64_t LoopId;
   /// This creates an empty loop.
-  LoopBase() : ParentLoop(nullptr), LoopId(IDCounter) {IDCounter++;}
+  LoopBase() : ParentLoop(nullptr), LoopId(++IDCounter) {}
   ~LoopBase() {
     for (size_t i = 0, e = SubLoops.size(); i != e; ++i)
       delete SubLoops[i];
@@ -336,7 +336,7 @@ public:
     auto I = std::find(Blocks.begin(), Blocks.end(), BB);
     assert(I != Blocks.end() && "N is not in this list!");
     Blocks.erase(I);
-
+    BB->removeLoopID(LoopId);
     DenseBlockSet.erase(BB);
   }
 

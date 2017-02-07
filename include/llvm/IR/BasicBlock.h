@@ -58,6 +58,7 @@ public:
 private:
   InstListType InstList;
   Function *Parent;
+  std::vector<uint64_t> LoopIds;
 
   void setParent(Function *parent);
   friend class SymbolTableListTraits<BasicBlock>;
@@ -251,6 +252,22 @@ public:
   /// \brief Returns a pointer to a member of the instruction list.
   static InstListType BasicBlock::*getSublistAccess(Instruction*) {
     return &BasicBlock::InstList;
+  }
+
+  void addLoopID(uint64_t loopId) {
+    LoopIds.push_back(loopId);
+  }
+
+  const std::vector<uint64_t> &getLoopIDs() const {
+    return LoopIds;
+  }
+
+  bool removeLoopID(uint64_t loopId) {
+    auto it = std::find(LoopIds.begin(), LoopIds.end(), loopId);
+    if (it == LoopIds.end())
+      return false;
+    LoopIds.erase(it);
+    return true;
   }
 
   /// \brief Returns a pointer to the symbol table if one exists.

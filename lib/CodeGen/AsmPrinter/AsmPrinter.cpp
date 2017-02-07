@@ -17,6 +17,7 @@
 #include "DwarfException.h"
 #include "WinException.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/ADT/Hashing.h"
 #include "llvm/Analysis/ConstantFolding.h"
 #include "llvm/CodeGen/Analysis.h"
 #include "llvm/CodeGen/GCMetadataPrinter.h"
@@ -42,6 +43,7 @@
 #include "llvm/MC/MCValue.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Format.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/Timer.h"
@@ -122,6 +124,18 @@ AsmPrinter::~AsmPrinter() {
     delete &GCMap;
     GCMetadataPrinters = nullptr;
   }
+}
+
+raw_ostream &AsmPrinter::getOffsetOutput() const {
+  std::error_code EC;
+  std::string FileName = "functions.offset";
+  static raw_fd_ostream output (FileName, EC, sys::fs::F_Text);
+
+  if (!EC)
+    return output;
+  errs() << "Error opening file with loop offset'"
+         << FileName << " for appending!\n";
+  return *llvm::make_unique<raw_fd_ostream>(2, false); // stderr.
 }
 
 bool AsmPrinter::isPositionIndependent() const {
@@ -839,20 +853,30 @@ void AsmPrinter::emitFrameAlloc(const MachineInstr &MI) {
 /// EmitFunctionBody - This method emits the body and trailer for a
 /// function.
 void AsmPrinter::EmitFunctionBody() {
+  uint64_t CurrentOffset = 0;
   EmitFunctionHeader();
 
   // Emit target-specific gunk before the function body.
   EmitFunctionBodyStart();
-
+  *llvm::make_unique<raw_fd_ostream>(2, false) << CurrentFnSym->getName() << "\n";
   bool ShouldPrintDebugScopes = MMI->hasDebugInfo();
-
+  raw_ostream &OffsetOutput = getOffsetOutput();
+  OffsetOutput << CurrentFnSym->getName() << "\n";
   // Print out code for the function.
   bool HasAnyRealCode = false;
   for (auto &MBB : *MF) {
+    // Basic block is in cycle.
+    if (MBB.getBasicBlock() != nullptr){
+      //*llvm::make_unique<raw_fd_ostream>(2, false) << "not null \n";
+      if (!MBB.getBasicBlock()->getLoopIDs().empty()) {
+        *llvm::make_unique<raw_fd_ostream>(2, false) << "in loop \n";
+        OffsetOutput << "[" << CurrentOffset << ", ";
+      }
+    }
     // Print a label for the basic block.
     EmitBasicBlockStart(MBB);
     for (auto &MI : MBB) {
-
+      *llvm::make_unique<raw_fd_ostream>(2, false) << MI.getDesc().getSize();
       // Print the assembly for the instruction.
       if (!MI.isPosition() && !MI.isImplicitDef() && !MI.isKill() &&
           !MI.isDebugValue()) {
@@ -904,6 +928,7 @@ void AsmPrinter::EmitFunctionBody() {
         break;
       }
 
+      CurrentOffset += MI.getDesc().getSize();
       if (ShouldPrintDebugScopes) {
         for (const HandlerInfo &HI : Handlers) {
           NamedRegionTimer T(HI.TimerName, HI.TimerGroupName,
@@ -912,7 +937,16 @@ void AsmPrinter::EmitFunctionBody() {
         }
       }
     }
-
+    if (MBB.getBasicBlock() != nullptr){
+      if (!MBB.getBasicBlock()->getLoopIDs().empty()) {
+        OffsetOutput << CurrentOffset << "] - ";
+      }
+      for (auto loopId : MBB.getBasicBlock()->getLoopIDs()) {
+        OffsetOutput << loopId << ";";
+      }
+      OffsetOutput << "\n";
+    }
+    *llvm::make_unique<raw_fd_ostream>(2, false) << CurrentOffset << "\n";
     EmitBasicBlockEnd(MBB);
   }
 

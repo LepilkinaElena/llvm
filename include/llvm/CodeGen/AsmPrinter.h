@@ -157,6 +157,7 @@ public:
   /// Return a unique ID for the current function.
   ///
   unsigned getFunctionNumber() const;
+  raw_ostream &getOffsetOutput() const;
 
   MCSymbol *getFunctionBegin() const { return CurrentFnBegin; }
   MCSymbol *getFunctionEnd() const { return CurrentFnEnd; }
