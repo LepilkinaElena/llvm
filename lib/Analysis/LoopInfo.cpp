@@ -729,6 +729,33 @@ unsigned PrintLoopFeaturesPass::CountTermBrBlocks(const Loop& L) {
 PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM) {
   //auto &IU = AM.getResult<IVUsersAnalysis>(L);
   //CountIntToFloatCast(IU);
+
+  if (L.getLoopID() != nullptr) {
+    dbgs() << "\nAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+    //L.getLoopID()->dump();
+    for (auto *Block : L.blocks())
+    if (Block)
+      Block->print(dbgs());
+    else
+      dbgs() << "Printing <null> block";
+    //dbgs() << "\n" << L.getLoopID()->getMetadataID() << "\n";
+
+  for (unsigned i = 1, e = L.getLoopID()->getNumOperands(); i < e; ++i) {
+    dbgs() << "i=" << i << "\n";
+    MDNode *MD = dyn_cast<MDNode>(L.getLoopID()->getOperand(i));
+    MDString *S = dyn_cast<MDString>(MD->getOperand(0));
+    if (S) 
+      dbgs() << S->getString();
+    if (!MD)
+      continue;
+
+    S = dyn_cast<MDString>(L.getLoopID()->getOperand(i));
+    if (S) 
+      dbgs() << S->getString();
+    if (!S)
+      continue;
+  }
+  }
   LoopFeatures Features(PassName, hash_value(L.LoopId), NumIVUsers,
                         L.isLoopSimplifyForm(), L.empty(), NumIntToFloatCast,
                         L.getLoopPreheader(), CountTermBrBlocks(L),

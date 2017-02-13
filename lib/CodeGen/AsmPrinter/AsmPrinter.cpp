@@ -858,7 +858,7 @@ void AsmPrinter::EmitFunctionBody() {
 
   // Emit target-specific gunk before the function body.
   EmitFunctionBodyStart();
-  *llvm::make_unique<raw_fd_ostream>(2, false) << CurrentFnSym->getName() << "\n";
+  //*llvm::make_unique<raw_fd_ostream>(2, false) << CurrentFnSym->getName() << "\n";
   bool ShouldPrintDebugScopes = MMI->hasDebugInfo();
   raw_ostream &OffsetOutput = getOffsetOutput();
   OffsetOutput << CurrentFnSym->getName() << "\n";
@@ -869,14 +869,14 @@ void AsmPrinter::EmitFunctionBody() {
     if (MBB.getBasicBlock() != nullptr){
       //*llvm::make_unique<raw_fd_ostream>(2, false) << "not null \n";
       if (!MBB.getBasicBlock()->getLoopIDs().empty()) {
-        *llvm::make_unique<raw_fd_ostream>(2, false) << "in loop \n";
-        OffsetOutput << "[" << CurrentOffset << ", ";
+        //*llvm::make_unique<raw_fd_ostream>(2, false) << "in loop \n";
+        //OffsetOutput << "[" << CurrentOffset << ", ";
       }
     }
     // Print a label for the basic block.
     EmitBasicBlockStart(MBB);
     for (auto &MI : MBB) {
-      *llvm::make_unique<raw_fd_ostream>(2, false) << MI.getDesc().getSize();
+      //*llvm::make_unique<raw_fd_ostream>(2, false) << MI.getDesc().getSize();
       // Print the assembly for the instruction.
       if (!MI.isPosition() && !MI.isImplicitDef() && !MI.isKill() &&
           !MI.isDebugValue()) {
@@ -946,7 +946,7 @@ void AsmPrinter::EmitFunctionBody() {
       }
       OffsetOutput << "\n";
     }
-    *llvm::make_unique<raw_fd_ostream>(2, false) << CurrentOffset << "\n";
+    //*llvm::make_unique<raw_fd_ostream>(2, false) << CurrentOffset << "\n";
     EmitBasicBlockEnd(MBB);
   }
 
