@@ -10,6 +10,7 @@
 #include "MCTargetDesc/X86BaseInfo.h"
 #include "MCTargetDesc/X86FixupKinds.h"
 #include "llvm/ADT/StringSwitch.h"
+#include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCExpr.h"
@@ -321,6 +322,8 @@ void X86AsmBackend::relaxInstruction(const MCInst &Inst,
   Res.setOpcode(RelaxedOp);
 }
 
+unsigned MICodeSize::CurInstrSize = 0;
+
 /// \brief Write a sequence of optimal nops to the output, covering \p Count
 /// bytes.
 /// \return - true on success, false on failure
@@ -347,7 +350,8 @@ bool X86AsmBackend::writeNopData(uint64_t Count, MCObjectWriter *OW) const {
     // nopw %cs:0L(%[re]ax,%[re]ax,1)
     {0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00},
   };
-
+  MICodeSize::CurInstrSize += Count;
+  errs() << "NOP" << Count;
   // This CPU doesn't support long nops. If needed add more.
   // FIXME: Can we get this from the subtarget somehow?
   // FIXME: We could generated something better than plain 0x90.
@@ -369,7 +373,7 @@ bool X86AsmBackend::writeNopData(uint64_t Count, MCObjectWriter *OW) const {
       OW->write8(Nops[Rest - 1][i]);
     Count -= ThisNopLength;
   } while (Count != 0);
-
+  
   return true;
 }
 

@@ -104,6 +104,8 @@ private:
 
   DebugLoc debugLoc;                    // Source line information.
 
+  unsigned CodeSize;
+
 #ifdef LLVM_BUILD_GLOBAL_ISEL
   /// Type of the instruction in case of a generic opcode.
   /// \invariant This must be LLT{} if getOpcode() is not
@@ -284,6 +286,10 @@ public:
 
   /// Returns the opcode of this MachineInstr.
   unsigned getOpcode() const { return MCID->Opcode; }
+
+  unsigned getCodeSize() const { return CodeSize; }
+
+  void setCodeSize(unsigned Size) { CodeSize = Size; }
 
   /// Access to explicit operands of the instruction.
   ///

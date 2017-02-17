@@ -9,6 +9,7 @@
 
 #include "llvm/MC/MCObjectStreamer.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCAssembler.h"
@@ -236,7 +237,6 @@ void MCObjectStreamer::EmitInstruction(const MCInst &Inst,
   // a line entry for any .loc directive that has been seen.
   MCCVLineEntry::Make(this);
   MCDwarfLineEntry::Make(this, getCurrentSection().first);
-
   // If this instruction doesn't need relaxation, just emit it as data.
   MCAssembler &Assembler = getAssembler();
   if (!Assembler.getBackend().mayNeedRelaxation(Inst)) {
@@ -267,7 +267,7 @@ void MCObjectStreamer::EmitInstToFragment(const MCInst &Inst,
                                           const MCSubtargetInfo &STI) {
   if (getAssembler().getRelaxAll() && getAssembler().isBundlingEnabled())
     llvm_unreachable("All instructions should have already been relaxed");
-
+  errs() << "Emit in fragment";
   // Always create a new, separate fragment here, because its size can change
   // during relaxation.
   MCRelaxableFragment *IF = new MCRelaxableFragment(Inst, STI);
@@ -277,6 +277,8 @@ void MCObjectStreamer::EmitInstToFragment(const MCInst &Inst,
   raw_svector_ostream VecOS(Code);
   getAssembler().getEmitter().encodeInstruction(Inst, VecOS, IF->getFixups(),
                                                 STI);
+  errs() << Code.size();
+  MICodeSize::CurInstrSize += Code.size();
   IF->getContents().append(Code.begin(), Code.end());
 }
 

@@ -14,6 +14,7 @@
 #include "llvm/MC/MCELFStreamer.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAsmLayout.h"
 #include "llvm/MC/MCAsmInfo.h"
@@ -67,7 +68,7 @@ void MCELFStreamer::mergeFragment(MCDataFragment *DF,
       MCObjectWriter *OW = Assembler.getBackend().createObjectWriter(VecOS);
 
       EF->setBundlePadding(static_cast<uint8_t>(RequiredBundlePadding));
-
+      errs() << "writeFragmentPadding";
       Assembler.writeFragmentPadding(*EF, FSize, OW);
       delete OW;
 
@@ -464,10 +465,11 @@ void MCELFStreamer::EmitInstToFragment(const MCInst &Inst,
                                        const MCSubtargetInfo &STI) {
   this->MCObjectStreamer::EmitInstToFragment(Inst, STI);
   MCRelaxableFragment &F = *cast<MCRelaxableFragment>(getCurrentFragment());
-
   for (unsigned i = 0, e = F.getFixups().size(); i != e; ++i)
     fixSymbolsInTLSFixups(F.getFixups()[i].getValue());
 }
+
+//unsigned MICodeSize::CurInstrSize = 0;
 
 void MCELFStreamer::EmitInstToData(const MCInst &Inst,
                                    const MCSubtargetInfo &STI) {
@@ -476,7 +478,7 @@ void MCELFStreamer::EmitInstToData(const MCInst &Inst,
   SmallString<256> Code;
   raw_svector_ostream VecOS(Code);
   Assembler.getEmitter().encodeInstruction(Inst, VecOS, Fixups, STI);
-
+  MICodeSize::CurInstrSize += Code.size();
   for (unsigned i = 0, e = Fixups.size(); i != e; ++i)
     fixSymbolsInTLSFixups(Fixups[i].getValue());
 
@@ -549,6 +551,7 @@ void MCELFStreamer::EmitInstToData(const MCInst &Inst,
 
   if (Assembler.isBundlingEnabled() && Assembler.getRelaxAll()) {
     if (!isBundleLocked()) {
+      errs() << "In enit to data";
       mergeFragment(getOrCreateDataFragment(), DF);
       delete DF;
     }

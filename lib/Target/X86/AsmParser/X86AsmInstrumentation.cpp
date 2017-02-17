@@ -1037,6 +1037,7 @@ void X86AsmInstrumentation::InstrumentAndEmitInstruction(
 
 void X86AsmInstrumentation::EmitInstruction(MCStreamer &Out,
                                             const MCInst &Inst) {
+  errs() << "EmitInstruction";
   Out.EmitInstruction(Inst, *STI);
 }
 

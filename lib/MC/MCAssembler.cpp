@@ -11,6 +11,7 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/Twine.h"
+#include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCAsmLayout.h"
@@ -424,7 +425,7 @@ static void writeFragment(const MCAssembler &Asm, const MCAsmLayout &Layout,
 
   // FIXME: Embed in fragments instead?
   uint64_t FragmentSize = Asm.computeFragmentSize(Layout, F);
-
+  errs() << "In writeFragment";
   Asm.writeFragmentPadding(F, FragmentSize, OW);
 
   // This variable (and its dummy usage) is to participate in the assert at
@@ -751,7 +752,7 @@ bool MCAssembler::fragmentNeedsRelaxation(const MCRelaxableFragment *F,
 
   return false;
 }
-
+unsigned MICodeSize::CurInstrSize = 0;
 bool MCAssembler::relaxInstruction(MCAsmLayout &Layout,
                                    MCRelaxableFragment &F) {
   if (!fragmentNeedsRelaxation(&F, Layout))
@@ -775,7 +776,8 @@ bool MCAssembler::relaxInstruction(MCAsmLayout &Layout,
   SmallString<256> Code;
   raw_svector_ostream VecOS(Code);
   getEmitter().encodeInstruction(Relaxed, VecOS, Fixups, F.getSubtargetInfo());
-
+  errs() << "relax";
+  MICodeSize::CurInstrSize += Code.size();
   // Update the fragment.
   F.setInst(Relaxed);
   F.getContents() = Code;

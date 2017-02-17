@@ -88,8 +88,6 @@ struct X86AddressMode {
 static inline X86AddressMode getAddressFromInstr(MachineInstr *MI,
                                                  unsigned Operand) {
   X86AddressMode AM;
-  dbgs() << "\n BBBBBBBBBBBBBBBBBBBB";
-  dbgs() << MI->getDesc().getSize();
   MachineOperand &Op = MI->getOperand(Operand);
   if (Op.isReg()) {
     AM.BaseType = X86AddressMode::RegBase;

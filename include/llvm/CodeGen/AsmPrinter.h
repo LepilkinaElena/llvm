@@ -63,6 +63,11 @@ class TargetLoweringObjectFile;
 class DataLayout;
 class TargetMachine;
 
+class MICodeSize {
+public:
+  static unsigned CurInstrSize;
+};
+
 /// This class is intended to be used as a driving class for all asm writers.
 class AsmPrinter : public MachineFunctionPass {
 public:

@@ -65,6 +65,7 @@ static const char *const CodeViewLineTablesGroupName = "CodeView Line Tables";
 STATISTIC(EmittedInsts, "Number of machine instrs printed");
 
 char AsmPrinter::ID = 0;
+unsigned MICodeSize::CurInstrSize = 0;
 
 typedef DenseMap<GCStrategy*, std::unique_ptr<GCMetadataPrinter>> gcp_map_type;
 static gcp_map_type &getGCMap(void *&P) {
@@ -862,6 +863,7 @@ void AsmPrinter::EmitFunctionBody() {
   bool ShouldPrintDebugScopes = MMI->hasDebugInfo();
   raw_ostream &OffsetOutput = getOffsetOutput();
   OffsetOutput << CurrentFnSym->getName() << "\n";
+  errs() << CurrentFnSym->getName() << "\n";
   // Print out code for the function.
   bool HasAnyRealCode = false;
   for (auto &MBB : *MF) {
@@ -870,7 +872,7 @@ void AsmPrinter::EmitFunctionBody() {
       //*llvm::make_unique<raw_fd_ostream>(2, false) << "not null \n";
       if (!MBB.getBasicBlock()->getLoopIDs().empty()) {
         //*llvm::make_unique<raw_fd_ostream>(2, false) << "in loop \n";
-        //OffsetOutput << "[" << CurrentOffset << ", ";
+        OffsetOutput << "[" << CurrentOffset << ", ";
       }
     }
     // Print a label for the basic block.
@@ -895,6 +897,7 @@ void AsmPrinter::EmitFunctionBody() {
       if (isVerbose())
         emitComments(MI, OutStreamer->GetCommentOS());
 
+      
       switch (MI.getOpcode()) {
       case TargetOpcode::CFI_INSTRUCTION:
         emitCFIInstruction(MI);
@@ -924,11 +927,13 @@ void AsmPrinter::EmitFunctionBody() {
         if (isVerbose()) emitKill(&MI, *this);
         break;
       default:
+        MI.print(errs());
         EmitInstruction(&MI);
         break;
       }
-
-      CurrentOffset += MI.getDesc().getSize();
+      errs() << MICodeSize::CurInstrSize << "\n";
+      CurrentOffset += MICodeSize::CurInstrSize;
+      MICodeSize::CurInstrSize = 0;
       if (ShouldPrintDebugScopes) {
         for (const HandlerInfo &HI : Handlers) {
           NamedRegionTimer T(HI.TimerName, HI.TimerGroupName,
