@@ -63,9 +63,12 @@ class TargetLoweringObjectFile;
 class DataLayout;
 class TargetMachine;
 
+typedef std::multimap<uint64_t, std::pair<uint64_t, uint64_t>> BasicBlocksMap;
+
 class MICodeSize {
 public:
   static unsigned CurInstrSize;
+  static std::map<std::string, BasicBlocksMap> BasicBlockBorders;
 };
 
 /// This class is intended to be used as a driving class for all asm writers.
@@ -208,6 +211,8 @@ public:
   /// Shut down the asmprinter. If you override this in your pass, you must make
   /// sure to call it explicitly.
   bool doFinalization(Module &M) override;
+
+  void emitBasicBlockOffset();
 
   /// Emit the specified function out to the OutStreamer.
   bool runOnMachineFunction(MachineFunction &MF) override {

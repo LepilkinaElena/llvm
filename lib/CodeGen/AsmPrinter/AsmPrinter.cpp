@@ -66,6 +66,7 @@ STATISTIC(EmittedInsts, "Number of machine instrs printed");
 
 char AsmPrinter::ID = 0;
 unsigned MICodeSize::CurInstrSize = 0;
+std::map<std::string, BasicBlocksMap> MICodeSize::BasicBlockBorders;
 
 typedef DenseMap<GCStrategy*, std::unique_ptr<GCMetadataPrinter>> gcp_map_type;
 static gcp_map_type &getGCMap(void *&P) {
@@ -861,20 +862,15 @@ void AsmPrinter::EmitFunctionBody() {
   EmitFunctionBodyStart();
   //*llvm::make_unique<raw_fd_ostream>(2, false) << CurrentFnSym->getName() << "\n";
   bool ShouldPrintDebugScopes = MMI->hasDebugInfo();
-  raw_ostream &OffsetOutput = getOffsetOutput();
-  OffsetOutput << CurrentFnSym->getName() << "\n";
   errs() << CurrentFnSym->getName() << "\n";
+  if (MICodeSize::BasicBlockBorders.find(CurrentFnSym->getName()) == 
+    MICodeSize::BasicBlockBorders.end()) {
+    MICodeSize::BasicBlockBorders.insert(std::make_pair(CurrentFnSym->getName(), BasicBlocksMap()));
+  }
   // Print out code for the function.
   bool HasAnyRealCode = false;
   for (auto &MBB : *MF) {
-    // Basic block is in cycle.
-    if (MBB.getBasicBlock() != nullptr){
-      //*llvm::make_unique<raw_fd_ostream>(2, false) << "not null \n";
-      if (!MBB.getBasicBlock()->getLoopIDs().empty()) {
-        //*llvm::make_unique<raw_fd_ostream>(2, false) << "in loop \n";
-        OffsetOutput << "[" << CurrentOffset << ", ";
-      }
-    }
+    uint64_t BBStart = CurrentOffset;
     // Print a label for the basic block.
     EmitBasicBlockStart(MBB);
     for (auto &MI : MBB) {
@@ -933,6 +929,7 @@ void AsmPrinter::EmitFunctionBody() {
       }
       errs() << MICodeSize::CurInstrSize << "\n";
       CurrentOffset += MICodeSize::CurInstrSize;
+      errs() << "Current Offset " << CurrentOffset << "\n";
       MICodeSize::CurInstrSize = 0;
       if (ShouldPrintDebugScopes) {
         for (const HandlerInfo &HI : Handlers) {
@@ -944,12 +941,11 @@ void AsmPrinter::EmitFunctionBody() {
     }
     if (MBB.getBasicBlock() != nullptr){
       if (!MBB.getBasicBlock()->getLoopIDs().empty()) {
-        OffsetOutput << CurrentOffset << "] - ";
+        for (auto loopId : MBB.getBasicBlock()->getLoopIDs()) {
+          MICodeSize::BasicBlockBorders[CurrentFnSym->getName()].
+            emplace(BBStart, std::make_pair(CurrentOffset, loopId));
+        }
       }
-      for (auto loopId : MBB.getBasicBlock()->getLoopIDs()) {
-        OffsetOutput << loopId << ";";
-      }
-      OffsetOutput << "\n";
     }
     //*llvm::make_unique<raw_fd_ostream>(2, false) << CurrentOffset << "\n";
     EmitBasicBlockEnd(MBB);
@@ -1284,7 +1280,7 @@ bool AsmPrinter::doFinalization(Module &M) {
   // Allow the target to emit any magic that it wants at the end of the file,
   // after everything else has gone out.
   EmitEndOfAsmFile(M);
-
+  emitBasicBlockOffset();
   delete Mang; Mang = nullptr;
   MMI = nullptr;
 
@@ -1292,6 +1288,17 @@ bool AsmPrinter::doFinalization(Module &M) {
   OutStreamer->reset();
 
   return false;
+}
+
+void AsmPrinter::emitBasicBlockOffset() {
+  raw_ostream &OffsetOutput = getOffsetOutput();
+  for (const auto &FunctionsBB : MICodeSize::BasicBlockBorders) {
+    OffsetOutput << FunctionsBB.first << "\n";
+    for (const auto &Borders : FunctionsBB.second) {
+      OffsetOutput << "[" << Borders.first << ", " << Borders.second.first <<
+        "] - " << Borders.second.second << "\n"; 
+    }
+  }
 }
 
 MCSymbol *AsmPrinter::getCurExceptionSym() {
