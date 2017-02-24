@@ -176,6 +176,64 @@ bool Loop::isLCSSAForm(DominatorTree &DT) const {
   return true;
 }
 
+void Loop::addSpecialID() {
+  if (getLoopIDMetadata() == nullptr) {
+    SmallVector<Metadata *, 4> MDs;
+    // Reserve first location for self reference to the LoopID metadata node.
+    MDs.push_back(nullptr);
+
+    LLVMContext &Context = getHeader()->getContext();
+    SmallVector<Metadata *, 1> IDNodeOperand;
+    IDNodeOperand.push_back(MDString::get(Context, "llvm.loop.id -1000"));
+    MDNode *IDNode = MDNode::get(Context, IDNodeOperand);
+    MDs.push_back(IDNode);
+
+    MDNode *NewLoopID = MDNode::get(Context, MDs);
+    // Set operand 0 to refer to the loop id itself.
+    NewLoopID->replaceOperandWith(0, NewLoopID);
+    setLoopID(NewLoopID);
+  }
+}
+
+void Loop::addIDMetadata(const MDNode *loopID) {
+  if (loopID != nullptr /*&& getLoopIDMetadata() == nullptr*/) {
+    SmallVector<Metadata *, 4> MDs;
+    // Reserve first location for self reference to the LoopID metadata node.
+    MDs.push_back(nullptr);
+
+    MDNode *LoopID = getLoopID();
+    LLVMContext &Context = getHeader()->getContext();
+    SmallVector<Metadata *, 1> IDNodeOperand;
+    MDString *LoopIdString = dyn_cast<MDString>(loopID->getOperand(0));
+    IDNodeOperand.push_back(MDString::get(Context, (LoopIdString->getString() + "." + std::to_string(LoopId)).str()));
+    MDNode *IDNode = MDNode::get(Context, IDNodeOperand);
+    MDs.push_back(IDNode);
+    if (LoopID) {
+      // Remove old existing loop id metadata.
+      for (unsigned i = 1, ie = LoopID->getNumOperands(); i < ie; ++i) {
+        bool IsIDMetadata = false;
+        MDNode *MD = dyn_cast<MDNode>(LoopID->getOperand(i));
+        if (MD) {
+          const MDString *S = dyn_cast<MDString>(MD->getOperand(0));
+          IsIDMetadata = S && S->getString().startswith("llvm.loop.id");
+        }
+        if (!IsIDMetadata)
+          MDs.push_back(LoopID->getOperand(i));
+      }
+    }
+
+    MDNode *NewLoopID = MDNode::get(Context, MDs);
+    // Set operand 0 to refer to the loop id itself.
+    NewLoopID->replaceOperandWith(0, NewLoopID);
+    setLoopID(NewLoopID);
+    // Mark all basic blocks to be in loop.
+    for (Loop::block_iterator I = block_begin(), E = block_end();
+         I != E; ++I) {
+      (*I)->addLoopID(IDNode);
+    }
+  }
+}
+
 bool Loop::isRecursivelyLCSSAForm(DominatorTree &DT) const {
   if (!isLCSSAForm(DT))
     return false;
@@ -205,6 +263,29 @@ bool Loop::isSafeToClone() const {
           return false;
   }
   return true;
+}
+
+MDNode *Loop::getLoopIDMetadata() const {
+  MDNode *LoopID = getLoopID();
+  if (!LoopID)
+    return nullptr;
+  // First operand should refer to the loop id itself.
+  assert(LoopID->getNumOperands() > 0 && "requires at least one operand");
+  assert(LoopID->getOperand(0) == LoopID && "invalid loop id");
+
+  for (unsigned i = 1, e = LoopID->getNumOperands(); i < e; ++i) {
+    MDNode *MD = dyn_cast<MDNode>(LoopID->getOperand(i));
+    if (!MD)
+      continue;
+
+    MDString *S = dyn_cast<MDString>(MD->getOperand(0));
+    if (!S)
+      continue;
+
+    if (S->getString().find("llvm.loop.id") == 0)
+      return MD;
+  }
+  return nullptr;
 }
 
 MDNode *Loop::getLoopID() const {
@@ -730,7 +811,7 @@ PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM)
   //auto &IU = AM.getResult<IVUsersAnalysis>(L);
   //CountIntToFloatCast(IU);
 
-  if (L.getLoopID() != nullptr) {
+  
     dbgs() << "\nAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
     //L.getLoopID()->dump();
     for (auto *Block : L.blocks())
@@ -739,7 +820,7 @@ PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM)
     else
       dbgs() << "Printing <null> block";
     //dbgs() << "\n" << L.getLoopID()->getMetadataID() << "\n";
-
+  if (L.getLoopID() != nullptr) {
   for (unsigned i = 1, e = L.getLoopID()->getNumOperands(); i < e; ++i) {
     dbgs() << "i=" << i << "\n";
     MDNode *MD = dyn_cast<MDNode>(L.getLoopID()->getOperand(i));
@@ -756,13 +837,19 @@ PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM)
       continue;
   }
   }
-  LoopFeatures Features(PassName, hash_value(L.LoopId), NumIVUsers,
+  MDNode *LoopID = L.getLoopIDMetadata();
+  std::string IDStr = "llvm.loop.id -1";
+  if (LoopID) {
+    MDString *LoopIdString = dyn_cast<MDString>(L.getLoopIDMetadata()->getOperand(0));
+    IDStr = LoopIdString->getString().str();
+  }
+  LoopFeatures Features(PassName, IDStr, NumIVUsers,
                         L.isLoopSimplifyForm(), L.empty(), NumIntToFloatCast,
                         L.getLoopPreheader(), CountTermBrBlocks(L),
                         L.getLoopLatch()->getTerminator()->getOpcode());
-  std::string HashNamePart = std::to_string(hash_value(L.LoopId)) + ".";
+  //std::string HashNamePart = IDStr + ".";
   raw_ostream &FeaturesOutput = FileName.empty() ? dbgs() : 
-                                Features::getFeaturesOutput(HashNamePart + FileName);
+                                Features::getFeaturesOutput(/*HashNamePart + */FileName);
   FeaturesOutput << Features.ToJSON();
   return PreservedAnalyses::all();
 }

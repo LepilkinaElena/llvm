@@ -733,7 +733,7 @@ static Loop *CloneLoop(Loop *L, Loop *PL, ValueToValueMapTy &VM,
   for (Loop::block_iterator I = L->block_begin(), E = L->block_end();
        I != E; ++I)
     if (LI->getLoopFor(*I) == L)
-      New.addBasicBlockToLoop(cast<BasicBlock>(VM[*I]), *LI);
+      New.addBasicBlockToLoop(cast<BasicBlock>(VM[*I]), *LI, false);
 
   // Add all of the subloops to the new loop.
   for (Loop *I : *L)
@@ -1166,6 +1166,8 @@ void LoopUnswitch::UnswitchNontrivialCondition(Value *LIC, Constant *Val,
   if (!LoopProcessWorklist.empty() && LoopProcessWorklist.back() == NewLoop &&
       LICHandle && !isa<Constant>(LICHandle))
     RewriteLoopBodyWithConditionConstant(NewLoop, LICHandle, Val, true);
+
+  NewLoop->addIDMetadata(L->getLoopIDMetadata());
 }
 
 /// Remove all instances of I from the worklist vector specified.

@@ -939,11 +939,19 @@ void AsmPrinter::EmitFunctionBody() {
         }
       }
     }
-    if (MBB.getBasicBlock() != nullptr){
+    if (MBB.getBasicBlock() != nullptr) {
       if (!MBB.getBasicBlock()->getLoopIDs().empty()) {
         for (auto loopId : MBB.getBasicBlock()->getLoopIDs()) {
+          loopId->dump();
+          MDString *LoopIdString = dyn_cast<MDString>(loopId->getOperand(0));
+          std::string IDNum = LoopIdString->getString().substr(
+            std::string("llvm.loop.id ").length());
+
+          IDNum = IDNum.substr(0, IDNum.find("."));
+
           MICodeSize::BasicBlockBorders[CurrentFnSym->getName()].
-            emplace(BBStart, std::make_pair(CurrentOffset, loopId));
+            emplace(BBStart, std::make_pair(CurrentOffset, std::strtoull(
+              IDNum.c_str(), NULL, 0)));
         }
       }
     }

@@ -422,7 +422,7 @@ bool llvm::UnrollLoop(Loop *L, unsigned Count, unsigned TripCount, bool Force,
           if (SE)
             SE->forgetLoop(OldLoop);
         }
-        NewLoop->addBasicBlockToLoop(New, *LI);
+        NewLoop->addBasicBlockToLoop(New, *LI, false);
       }
 
       if (*BB == Header)
@@ -488,6 +488,11 @@ bool llvm::UnrollLoop(Loop *L, unsigned Count, unsigned TripCount, bool Force,
     for (BasicBlock *NewBlock : NewBlocks)
       for (Instruction &I : *NewBlock)
         ::remapInstruction(&I, LastValueMap);
+
+    // Add ID for new loop and mark all basic blocks.
+    for (const auto LoopPair : NewLoops) {
+      LoopPair.second->addIDMetadata(LoopPair.first->getLoopIDMetadata());
+    }
   }
 
   // Loop over the PHI nodes in the original block, setting incoming values.

@@ -397,7 +397,7 @@ static Loop *separateNestedLoop(Loop *L, BasicBlock *Preheader,
     assert(NewOuter->isRecursivelyLCSSAForm(*DT) &&
            "LCSSA is broken after separating nested loops!");
   }
-
+  NewOuter->addIDMetadata(L->getLoopIDMetadata());
   return NewOuter;
 }
 

@@ -308,7 +308,7 @@ static void CloneLoopBlocks(Loop *L, Value *NewIter,
     NewBlocks.push_back(NewBB);
 
     if (NewLoop)
-      NewLoop->addBasicBlockToLoop(NewBB, *LI);
+      NewLoop->addBasicBlockToLoop(NewBB, *LI, false);
     else if (ParentLoop)
       ParentLoop->addBasicBlockToLoop(NewBB, *LI);
 
@@ -370,6 +370,7 @@ static void CloneLoopBlocks(Loop *L, Value *NewIter,
     }
   }
   if (NewLoop) {
+    NewLoop->addIDMetadata(L->getLoopIDMetadata());
     // Add unroll disable metadata to disable future unrolling for this loop.
     SmallVector<Metadata *, 4> MDs;
     // Reserve first location for self reference to the LoopID metadata node.

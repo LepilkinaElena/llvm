@@ -145,9 +145,11 @@ public:
   /// Return the name of the corresponding LLVM basic block, or "(null)".
   StringRef getName() const;
 
-  void addLoopID(uint64_t loopId) {}
+  void addLoopID(const MDNode *loopId) {}
 
-  bool removeLoopID(uint64_t loopId) {return false;}
+  bool removeLoopID(const MDNode *loopId) { return false; }
+
+  bool emptyLoopIDs() { return true; }
 
   /// Return a formatted string to identify this block and its parent function.
   std::string getFullName() const;

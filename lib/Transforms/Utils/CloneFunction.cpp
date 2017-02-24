@@ -694,6 +694,7 @@ Loop *llvm::cloneLoopWithPreheader(BasicBlock *Before, BasicBlock *LoopDomBB,
   Loop *ParentLoop = OrigLoop->getParentLoop();
 
   Loop *NewLoop = new Loop();
+
   if (ParentLoop)
     ParentLoop->addChildLoop(NewLoop);
   else
@@ -718,7 +719,7 @@ Loop *llvm::cloneLoopWithPreheader(BasicBlock *Before, BasicBlock *LoopDomBB,
     VMap[BB] = NewBB;
 
     // Update LoopInfo.
-    NewLoop->addBasicBlockToLoop(NewBB, *LI);
+    NewLoop->addBasicBlockToLoop(NewBB, *LI, false);
 
     // Add DominatorTree node. After seeing all blocks, update to correct IDom.
     DT->addNewBlock(NewBB, NewPH);
@@ -738,6 +739,8 @@ Loop *llvm::cloneLoopWithPreheader(BasicBlock *Before, BasicBlock *LoopDomBB,
                                 NewPH);
   F->getBasicBlockList().splice(Before->getIterator(), F->getBasicBlockList(),
                                 NewLoop->getHeader()->getIterator(), F->end());
+
+  NewLoop->addIDMetadata(OrigLoop->getLoopIDMetadata());
 
   return NewLoop;
 }

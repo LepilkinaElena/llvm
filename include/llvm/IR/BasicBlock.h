@@ -58,7 +58,7 @@ public:
 private:
   InstListType InstList;
   Function *Parent;
-  std::vector<uint64_t> LoopIds;
+  std::vector<const MDNode *> LoopIds;
 
   void setParent(Function *parent);
   friend class SymbolTableListTraits<BasicBlock>;
@@ -254,20 +254,52 @@ public:
     return &BasicBlock::InstList;
   }
 
-  void addLoopID(uint64_t loopId) {
-    LoopIds.push_back(loopId);
+  void addLoopID(const MDNode *loopId) {
+    if (loopId != nullptr)
+      LoopIds.push_back(loopId);
   }
 
-  const std::vector<uint64_t> &getLoopIDs() const {
+  const std::vector<const MDNode *> &getLoopIDs() const {
     return LoopIds;
   }
 
-  bool removeLoopID(uint64_t loopId) {
+  bool removeLoopID(const MDNode *loopId) {
     auto it = std::find(LoopIds.begin(), LoopIds.end(), loopId);
     if (it == LoopIds.end())
       return false;
     LoopIds.erase(it);
+    /*SmallVector<Metadata *, 4> MDs;
+    // Reserve first location for self reference to the LoopID metadata node.
+    MDs.push_back(nullptr);
+    LLVMContext &Context = getContext();
+    SmallVector<Metadata *, 1> IDNodeOperand;
+    MDString *LoopIdString = dyn_cast<MDString>(loopId->getOperand(0));
+    IDNodeOperand.push_back(MDString::get(Context, (LoopIdString->getString() + ".(-1)").str()));
+    MDNode *IDNode = MDNode::get(Context, IDNodeOperand);
+    MDs.push_back(IDNode);
+    if (loopId) {
+      // Remove old existing loop id metadata.
+      for (unsigned i = 1, ie = loopId->getNumOperands(); i < ie; ++i) {
+        bool IsIDMetadata = false;
+        MDNode *MD = dyn_cast<MDNode>(loopId->getOperand(i));
+        if (MD) {
+          const MDString *S = dyn_cast<MDString>(MD->getOperand(0));
+          IsIDMetadata = S && S->getString().startswith("llvm.loop.id");
+        }
+        if (!IsIDMetadata)
+          MDs.push_back(loopId->getOperand(i));
+      }
+    }
+
+    MDNode *NewLoopID = MDNode::get(Context, MDs);
+    // Set operand 0 to refer to the loop id itself.
+    NewLoopID->replaceOperandWith(0, NewLoopID);
+    loopId = NewLoopID;*/
     return true;
+  }
+
+  bool emptyLoopIDs() {
+    return LoopIds.empty();
   }
 
   /// \brief Returns a pointer to the symbol table if one exists.

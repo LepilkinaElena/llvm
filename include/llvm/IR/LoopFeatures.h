@@ -14,7 +14,7 @@
 namespace llvm {
 
 class LoopFeatures : public Features {
-  uint64_t LoopId;
+  std::string LoopId;
 
   unsigned NumIVUsers;
   bool IsLoopSimplifyForm;
@@ -25,7 +25,7 @@ class LoopFeatures : public Features {
   unsigned LatchBlockTermOpcode;
   
 public:
-  LoopFeatures(const std::string &CurPassName, uint64_t LoopId, unsigned NumIVUsers,
+  LoopFeatures(const std::string &CurPassName, std::string LoopId, unsigned NumIVUsers,
                            bool IsLoopSimplifyForm, bool isEmptyLoop, unsigned NumIntToFloatCast,
                            bool HasLoopPreheader, unsigned NumTermBrBlocks, 
                            unsigned LatchBlockTermOpcode);

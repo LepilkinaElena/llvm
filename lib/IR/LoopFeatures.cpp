@@ -3,7 +3,7 @@
 
 using namespace llvm;
 
-LoopFeatures::LoopFeatures(const std::string &CurPassName, uint64_t LoopId, unsigned NumIVUsers,
+LoopFeatures::LoopFeatures(const std::string &CurPassName, std::string LoopId, unsigned NumIVUsers,
                            bool IsLoopSimplifyForm, bool isEmptyLoop, unsigned NumIntToFloatCast,
                            bool HasLoopPreheader, unsigned NumTermBrBlocks, 
                            unsigned LatchBlockTermOpcode) : 
@@ -14,7 +14,7 @@ LoopFeatures::LoopFeatures(const std::string &CurPassName, uint64_t LoopId, unsi
 
 std::string LoopFeatures::ToJSON() const {
   std::string Json = "{\n  \"type\": \"loop\",\n  \"features\": {\n";
-  Json += "    \"id\": " + std::to_string(LoopId) + ",\n";
+  Json += "    \"id\": " + LoopId + ",\n";
   Json += "    \"pass\": \"" + PassName + "\",\n";
   Json += "    \"numIVUsers\": " + std::to_string(NumIVUsers) + ",\n";
   Json += "    \"isLoopSimplifyForm\": " + BooleanToString(IsLoopSimplifyForm) + ",\n";

@@ -184,7 +184,7 @@ BlockT *LoopBase<BlockT, LoopT>::getLoopLatch() const {
 ///
 template<class BlockT, class LoopT>
 void LoopBase<BlockT, LoopT>::
-addBasicBlockToLoop(BlockT *NewBB, LoopInfoBase<BlockT, LoopT> &LIB) {
+addBasicBlockToLoop(BlockT *NewBB, LoopInfoBase<BlockT, LoopT> &LIB, bool addLoopID) {
   assert((Blocks.empty() || LIB[getHeader()] == this) &&
          "Incorrect LI specified for this loop!");
   assert(NewBB && "Cannot add a null basic block to the loop!");
@@ -199,7 +199,8 @@ addBasicBlockToLoop(BlockT *NewBB, LoopInfoBase<BlockT, LoopT> &LIB) {
   while (L) {
     L->addBlockEntry(NewBB);
     //L->dump();
-    NewBB->addLoopID(L->LoopId);
+    if (addLoopID) 
+      NewBB->addLoopID(L->getLoopIDMetadata());
     L = L->getParentLoop();
   }
 }
@@ -495,8 +496,13 @@ analyze(const DominatorTreeBase<BlockT> &DomTree) {
     }
     // Perform a backward CFG traversal to discover and map blocks in this loop.
     if (!Backedges.empty()) {
+
+      errs() << " in LoopInfoImpl";
       LoopT *L = new LoopT(Header);
+
       discoverAndMapSubloop(L, ArrayRef<BlockT*>(Backedges), this, DomTree);
+      L->dump();
+      //L->addSpecialID();
     }
   }
   // Perform a single forward CFG traversal to populate block and subloop

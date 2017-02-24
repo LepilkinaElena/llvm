@@ -88,10 +88,16 @@ public:
   uint64_t LoopId;
   /// This creates an empty loop.
   LoopBase() : ParentLoop(nullptr), LoopId(++IDCounter) {}
-  ~LoopBase() {
+  virtual ~LoopBase() {
     for (size_t i = 0, e = SubLoops.size(); i != e; ++i)
       delete SubLoops[i];
   }
+
+  virtual MDNode *getLoopIDMetadata() const {
+    return nullptr;
+  }
+
+  virtual void addSpecialID() {}
 
   /// Return the nesting level of this loop.  An outer-most loop has depth 1,
   /// for consistency with loop depth values used for basic blocks, where depth
@@ -270,7 +276,7 @@ public:
   /// Because of this, it is added as a member of all parent loops, and is added
   /// to the specified LoopInfo object as being in the current basic block.  It
   /// is not valid to replace the loop header with this method.
-  void addBasicBlockToLoop(BlockT *NewBB, LoopInfoBase<BlockT, LoopT> &LI);
+  void addBasicBlockToLoop(BlockT *NewBB, LoopInfoBase<BlockT, LoopT> &LI, bool addLoopID = true);
 
   /// This is used when splitting loops up. It replaces the OldChild entry in
   /// our children list with NewChild, and updates the parent pointer of
@@ -333,10 +339,12 @@ public:
   /// Blocks as appropriate. This does not update the mapping in the LoopInfo
   /// class.
   void removeBlockFromLoop(BlockT *BB) {
+    
     auto I = std::find(Blocks.begin(), Blocks.end(), BB);
     assert(I != Blocks.end() && "N is not in this list!");
     Blocks.erase(I);
-    BB->removeLoopID(LoopId);
+    if (!BB->emptyLoopIDs())
+      BB->removeLoopID(getLoopIDMetadata());
     DenseBlockSet.erase(BB);
   }
 
@@ -449,6 +457,11 @@ public:
   /// contain llvm.loop or or if multiple latches contain different nodes then
   /// 0 is returned.
   MDNode *getLoopID() const;
+
+  MDNode *getLoopIDMetadata() const override;
+
+  void addIDMetadata(const MDNode *loopID);
+  void addSpecialID() override;
   /// Set the llvm.loop loop id metadata for this loop.
   ///
   /// The LoopID metadata node will be added to each terminator instruction in
@@ -594,7 +607,15 @@ public:
       BBMap.erase(BB);
       return;
     }
+    auto I = BBMap.find(BB);
+    if (I != BBMap.end()) {
+      for (LoopT *OldLoop = I->second; OldLoop; OldLoop = OldLoop->getParentLoop())
+        if (!BB->emptyLoopIDs())
+          BB->removeLoopID(OldLoop->getLoopIDMetadata());
+    }
     BBMap[BB] = L;
+    for (LoopT *NewLoop = L; NewLoop; NewLoop = NewLoop->getParentLoop())
+      BB->addLoopID(NewLoop->getLoopIDMetadata());
   }
 
   /// Replace the specified loop in the top-level loops list with the indicated
