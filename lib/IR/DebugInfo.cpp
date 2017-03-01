@@ -241,6 +241,18 @@ bool DebugInfoFinder::addScope(DIScope *Scope) {
   return true;
 }
 
+std::string GeneralInfo::InFileName;
+void GeneralInfo::setInFile(StringRef InFile) {
+  size_t pos = InFile.find_last_of('/');
+  StringRef FileName =  InFile;
+  if (pos != StringRef::npos) {
+    FileName = InFile.substr(pos + 1);
+  }
+  pos = FileName.find_first_of('.');
+
+  InFileName = FileName.substr(0, pos).str();
+}
+
 bool llvm::stripDebugInfo(Function &F) {
   bool Changed = false;
   if (F.getSubprogram()) {

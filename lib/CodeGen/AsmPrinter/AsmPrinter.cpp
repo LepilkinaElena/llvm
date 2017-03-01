@@ -130,7 +130,7 @@ AsmPrinter::~AsmPrinter() {
 
 raw_ostream &AsmPrinter::getOffsetOutput() const {
   std::error_code EC;
-  std::string FileName = "functions.offset";
+  std::string FileName = GeneralInfo::InFileName + ".functions.offset";
   static raw_fd_ostream output (FileName, EC, sys::fs::F_Text);
 
   if (!EC)

@@ -126,6 +126,13 @@ private:
   SmallPtrSet<const MDNode *, 32> NodesSeen;
 };
 
+class GeneralInfo {
+public:
+    static std::string InFileName;
+
+    static void setInFile(StringRef InFile);
+};
+
 } // end namespace llvm
 
 #endif
