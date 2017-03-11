@@ -351,7 +351,7 @@ bool X86AsmBackend::writeNopData(uint64_t Count, MCObjectWriter *OW) const {
     {0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00},
   };
   MICodeSize::CurInstrSize += Count;
-  errs() << "NOP" << Count;
+  //errs() << "NOP" << Count;
   // This CPU doesn't support long nops. If needed add more.
   // FIXME: Can we get this from the subtarget somehow?
   // FIXME: We could generated something better than plain 0x90.

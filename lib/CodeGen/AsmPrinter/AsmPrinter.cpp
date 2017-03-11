@@ -862,7 +862,7 @@ void AsmPrinter::EmitFunctionBody() {
   EmitFunctionBodyStart();
   //*llvm::make_unique<raw_fd_ostream>(2, false) << CurrentFnSym->getName() << "\n";
   bool ShouldPrintDebugScopes = MMI->hasDebugInfo();
-  errs() << CurrentFnSym->getName() << "\n";
+  //errs() << CurrentFnSym->getName() << "\n";
   if (MICodeSize::BasicBlockBorders.find(CurrentFnSym->getName()) == 
     MICodeSize::BasicBlockBorders.end()) {
     MICodeSize::BasicBlockBorders.insert(std::make_pair(CurrentFnSym->getName(), BasicBlocksMap()));
@@ -923,13 +923,13 @@ void AsmPrinter::EmitFunctionBody() {
         if (isVerbose()) emitKill(&MI, *this);
         break;
       default:
-        MI.print(errs());
+        //MI.print(errs());
         EmitInstruction(&MI);
         break;
       }
-      errs() << MICodeSize::CurInstrSize << "\n";
+      //errs() << MICodeSize::CurInstrSize << "\n";
       CurrentOffset += MICodeSize::CurInstrSize;
-      errs() << "Current Offset " << CurrentOffset << "\n";
+      //errs() << "Current Offset " << CurrentOffset << "\n";
       MICodeSize::CurInstrSize = 0;
       if (ShouldPrintDebugScopes) {
         for (const HandlerInfo &HI : Handlers) {
@@ -941,17 +941,20 @@ void AsmPrinter::EmitFunctionBody() {
     }
     if (MBB.getBasicBlock() != nullptr) {
       if (!MBB.getBasicBlock()->getLoopIDs().empty()) {
+        std::set<std::string> emittedIds;
         for (auto loopId : MBB.getBasicBlock()->getLoopIDs()) {
-          loopId->dump();
+          //loopId->dump();
           MDString *LoopIdString = dyn_cast<MDString>(loopId->getOperand(0));
           std::string IDNum = LoopIdString->getString().substr(
             std::string("llvm.loop.id ").length());
 
           IDNum = IDNum.substr(0, IDNum.find("."));
-
-          MICodeSize::BasicBlockBorders[CurrentFnSym->getName()].
-            emplace(BBStart, std::make_pair(CurrentOffset, std::strtoull(
-              IDNum.c_str(), NULL, 0)));
+          if (emittedIds.find(IDNum) == emittedIds.end()) {
+            MICodeSize::BasicBlockBorders[CurrentFnSym->getName()].
+              emplace(BBStart, std::make_pair(CurrentOffset, std::strtoull(
+                IDNum.c_str(), NULL, 0)));
+              emittedIds.insert(IDNum);
+          }
         }
       }
     }

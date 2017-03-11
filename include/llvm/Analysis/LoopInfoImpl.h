@@ -497,11 +497,11 @@ analyze(const DominatorTreeBase<BlockT> &DomTree) {
     // Perform a backward CFG traversal to discover and map blocks in this loop.
     if (!Backedges.empty()) {
 
-      errs() << " in LoopInfoImpl";
+      //errs() << " in LoopInfoImpl";
       LoopT *L = new LoopT(Header);
 
       discoverAndMapSubloop(L, ArrayRef<BlockT*>(Backedges), this, DomTree);
-      L->dump();
+      //L->dump();
       //L->addSpecialID();
     }
   }

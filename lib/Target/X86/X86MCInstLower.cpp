@@ -88,7 +88,7 @@ void X86AsmPrinter::StackMapShadowTracker::count(MCInst &Inst,
     raw_svector_ostream VecOS(Code);
     CodeEmitter->encodeInstruction(Inst, VecOS, Fixups, STI);
     CurrentShadowSize += Code.size();
-    errs() << "InShadow";
+    //errs() << "InShadow";
     MICodeSize::CurInstrSize += Code.size();
     if (CurrentShadowSize >= RequiredShadowSize)
       InShadow = false; // The shadow is big enough. Stop counting.
@@ -97,10 +97,10 @@ void X86AsmPrinter::StackMapShadowTracker::count(MCInst &Inst,
 
 void X86AsmPrinter::StackMapShadowTracker::emitShadowPadding(
     MCStreamer &OutStreamer, const MCSubtargetInfo &STI) {
-  errs() << "emitShadowPadding";
+  //errs() << "emitShadowPadding";
   if (InShadow && CurrentShadowSize < RequiredShadowSize) {
     InShadow = false;
-    errs() << "11111emitShadowPadding";
+    //errs() << "11111emitShadowPadding";
     EmitNops(OutStreamer, RequiredShadowSize - CurrentShadowSize,
              MF->getSubtarget<X86Subtarget>().is64Bit(), STI);
   }
@@ -831,7 +831,7 @@ static unsigned EmitNop(MCStreamer &OS, unsigned NumBytes, bool Is64Bit,
     break;
   }
   assert(NopSize <= NumBytes && "We overemitted?");
-  errs() << "In second";
+  //errs() << "In second";
   return NopSize;
 }
 
@@ -950,10 +950,10 @@ void X86AsmPrinter::LowerPATCHABLE_OP(const MachineInstr &MI,
       // NB! In some cases the encoding for PUSH64r (e.g. PUSH64r %R9) takes two
       // bytes too, so the check on MinSize is important.
       MCI.setOpcode(X86::PUSH64rmr);
-      errs() << "Not Nop";
+      //errs() << "Not Nop";
       MICodeSize::CurInstrSize += Code.size();
     } else {
-      errs() << "In first";
+      //errs() << "In first";
       unsigned NopSize = EmitNop(*OutStreamer, MinSize, Subtarget->is64Bit(),
                                  getSubtargetInfo());
       MICodeSize::CurInstrSize += NopSize;

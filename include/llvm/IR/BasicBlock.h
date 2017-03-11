@@ -255,8 +255,11 @@ public:
   }
 
   void addLoopID(const MDNode *loopId) {
-    if (loopId != nullptr)
-      LoopIds.push_back(loopId);
+    if (loopId != nullptr) {
+      auto it = std::find(LoopIds.begin(), LoopIds.end(), loopId);
+      if (it == LoopIds.end())
+        LoopIds.push_back(loopId);
+    }
   }
 
   const std::vector<const MDNode *> &getLoopIDs() const {

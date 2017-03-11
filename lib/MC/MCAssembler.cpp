@@ -425,7 +425,7 @@ static void writeFragment(const MCAssembler &Asm, const MCAsmLayout &Layout,
 
   // FIXME: Embed in fragments instead?
   uint64_t FragmentSize = Asm.computeFragmentSize(Layout, F);
-  errs() << "In writeFragment";
+  //errs() << "In writeFragment";
   Asm.writeFragmentPadding(F, FragmentSize, OW);
 
   // This variable (and its dummy usage) is to participate in the assert at
@@ -776,7 +776,7 @@ bool MCAssembler::relaxInstruction(MCAsmLayout &Layout,
   SmallString<256> Code;
   raw_svector_ostream VecOS(Code);
   getEmitter().encodeInstruction(Relaxed, VecOS, Fixups, F.getSubtargetInfo());
-  errs() << "relax";
+  //errs() << "relax";
   MICodeSize::CurInstrSize += Code.size();
   // Update the fragment.
   F.setInst(Relaxed);

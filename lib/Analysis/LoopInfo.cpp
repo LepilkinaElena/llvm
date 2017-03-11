@@ -812,15 +812,15 @@ PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM)
   //CountIntToFloatCast(IU);
 
   
-    dbgs() << "\nAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+    //dbgs() << "\nAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
     //L.getLoopID()->dump();
-    for (auto *Block : L.blocks())
+    /*for (auto *Block : L.blocks())
     if (Block)
       Block->print(dbgs());
     else
       dbgs() << "Printing <null> block";
-    //dbgs() << "\n" << L.getLoopID()->getMetadataID() << "\n";
-  if (L.getLoopID() != nullptr) {
+    //dbgs() << "\n" << L.getLoopID()->getMetadataID() << "\n";*/
+  /*if (L.getLoopID() != nullptr) {
   for (unsigned i = 1, e = L.getLoopID()->getNumOperands(); i < e; ++i) {
     dbgs() << "i=" << i << "\n";
     MDNode *MD = dyn_cast<MDNode>(L.getLoopID()->getOperand(i));
@@ -836,7 +836,7 @@ PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM)
     if (!S)
       continue;
   }
-  }
+  }*/
   MDNode *LoopID = L.getLoopIDMetadata();
   std::string IDStr = "llvm.loop.id -1";
   if (LoopID) {
