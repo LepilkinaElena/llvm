@@ -13,9 +13,11 @@ LoopFeatures::LoopFeatures(const std::string &CurPassName, std::string LoopId, u
     NumTermBrBlocks(NumTermBrBlocks), LatchBlockTermOpcode(LatchBlockTermOpcode) {}
 
 std::string LoopFeatures::ToJSON() const {
-  std::string Json = "{\n  \"type\": \"loop\",\n  \"features\": {\n";
-  Json += "    \"id\": " + LoopId + ",\n";
-  Json += "    \"pass\": \"" + PassName + "\",\n";
+  std::string Json = "{\n  \"type\": \"loop\",\n";
+  Json += "  \"id\": \"" + LoopId + "\",\n";
+  Json += "  \"pass_place\": \"" + PassName + "\",\n";
+  Json += "  \"features\": {\n";
+  
   Json += "    \"numIVUsers\": " + std::to_string(NumIVUsers) + ",\n";
   Json += "    \"isLoopSimplifyForm\": " + BooleanToString(IsLoopSimplifyForm) + ",\n";
   Json += "    \"isEmpty\": " + BooleanToString(IsEmpty) + ",\n";
@@ -23,6 +25,6 @@ std::string LoopFeatures::ToJSON() const {
   Json += "    \"hasLoopPreheader\": " + BooleanToString(HasLoopPreheader) + ",\n";
   Json += "    \"numTermBrBlocks\": " + std::to_string(NumTermBrBlocks) + ",\n";
   Json += "    \"latchBlockTermOpcode\": " + std::to_string(LatchBlockTermOpcode) + "\n";
-  Json += "}\n}\n";
+  Json += "  }\n}\n";
   return Json;
 }
