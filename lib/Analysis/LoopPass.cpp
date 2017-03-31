@@ -132,7 +132,6 @@ LPPassManager::LPPassManager()
 Loop &LPPassManager::addLoop(Loop *ParentLoop) {
   // Create a new loop. LI will take ownership.
   Loop *L = new Loop();
-//  errs() << " In LoopPass ";
 
   // Insert into the loop nest and the loop queue.
   if (!ParentLoop) {
@@ -152,6 +151,7 @@ Loop &LPPassManager::addLoop(Loop *ParentLoop) {
       break;
     }
   }
+  //L->addIDMetadata(ParentLoop->getLoopIDMetadata());
   return *L;
 }
 

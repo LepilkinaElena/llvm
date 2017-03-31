@@ -151,6 +151,8 @@ public:
 
   bool emptyLoopIDs() { return true; }
 
+  const std::vector<const MDNode *> &getLoopIDs() const { return getBasicBlock()->getLoopIDs(); }
+
   /// Return a formatted string to identify this block and its parent function.
   std::string getFullName() const;
 

@@ -205,7 +205,7 @@ void Loop::addIDMetadata(const MDNode *loopID) {
     LLVMContext &Context = getHeader()->getContext();
     SmallVector<Metadata *, 1> IDNodeOperand;
     MDString *LoopIdString = dyn_cast<MDString>(loopID->getOperand(0));
-    IDNodeOperand.push_back(MDString::get(Context, (LoopIdString->getString() + "." + std::to_string(LoopId)).str()));
+    IDNodeOperand.push_back(MDString::get(Context, (LoopIdString->getString()/* + "." + std::to_string(LoopId)*/).str()));
     MDNode *IDNode = MDNode::get(Context, IDNodeOperand);
     MDs.push_back(IDNode);
     if (LoopID) {

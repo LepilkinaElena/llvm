@@ -925,12 +925,13 @@ void AsmPrinter::EmitFunctionBody() {
       default:
         //MI.print(errs());
         EmitInstruction(&MI);
+        CurrentOffset++;
         break;
       }
       //errs() << MICodeSize::CurInstrSize << "\n";
-      CurrentOffset += MICodeSize::CurInstrSize;
+      
       //errs() << "Current Offset " << CurrentOffset << "\n";
-      MICodeSize::CurInstrSize = 0;
+      //MICodeSize::CurInstrSize = 0;
       if (ShouldPrintDebugScopes) {
         for (const HandlerInfo &HI : Handlers) {
           NamedRegionTimer T(HI.TimerName, HI.TimerGroupName,

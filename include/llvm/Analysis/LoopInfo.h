@@ -98,6 +98,7 @@ public:
   }
 
   virtual void addSpecialID() {}
+  virtual void addIDMetadata(const MDNode *loopID) {}
 
   /// Return the nesting level of this loop.  An outer-most loop has depth 1,
   /// for consistency with loop depth values used for basic blocks, where depth
@@ -343,8 +344,8 @@ public:
     auto I = std::find(Blocks.begin(), Blocks.end(), BB);
     assert(I != Blocks.end() && "N is not in this list!");
     Blocks.erase(I);
-    if (!BB->emptyLoopIDs())
-      BB->removeLoopID(getLoopIDMetadata());
+    /*if (!BB->emptyLoopIDs())
+      BB->removeLoopID(getLoopIDMetadata());*/
     DenseBlockSet.erase(BB);
   }
 
@@ -608,14 +609,15 @@ public:
       return;
     }
     auto I = BBMap.find(BB);
-    if (I != BBMap.end()) {
+    if (I != BBMap.end() && L->getLoopIDMetadata() != nullptr) {
       for (LoopT *OldLoop = I->second; OldLoop; OldLoop = OldLoop->getParentLoop())
         if (!BB->emptyLoopIDs())
           BB->removeLoopID(OldLoop->getLoopIDMetadata());
     }
     BBMap[BB] = L;
-    for (LoopT *NewLoop = L; NewLoop; NewLoop = NewLoop->getParentLoop())
+    for (LoopT *NewLoop = L; NewLoop; NewLoop = NewLoop->getParentLoop()) {
       BB->addLoopID(NewLoop->getLoopIDMetadata());
+    }
   }
 
   /// Replace the specified loop in the top-level loops list with the indicated

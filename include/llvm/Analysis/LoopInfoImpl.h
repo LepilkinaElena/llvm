@@ -199,8 +199,9 @@ addBasicBlockToLoop(BlockT *NewBB, LoopInfoBase<BlockT, LoopT> &LIB, bool addLoo
   while (L) {
     L->addBlockEntry(NewBB);
     //L->dump();
-    if (addLoopID) 
+    if (addLoopID) {
       NewBB->addLoopID(L->getLoopIDMetadata());
+    }
     L = L->getParentLoop();
   }
 }
@@ -472,7 +473,7 @@ void PopulateLoopsDFS<BlockT, LoopT>::insertIntoLoop(BlockT *Block) {
 template<class BlockT, class LoopT>
 void LoopInfoBase<BlockT, LoopT>::
 analyze(const DominatorTreeBase<BlockT> &DomTree) {
-
+  std::map<LoopT *, BlockT *> newLoops;
   // Postorder traversal of the dominator tree.
   const DomTreeNodeBase<BlockT> *DomRoot = DomTree.getRootNode();
   for (auto DomNode : post_order(DomRoot)) {
@@ -500,15 +501,21 @@ analyze(const DominatorTreeBase<BlockT> &DomTree) {
       //errs() << " in LoopInfoImpl";
       LoopT *L = new LoopT(Header);
 
+
       discoverAndMapSubloop(L, ArrayRef<BlockT*>(Backedges), this, DomTree);
-      //L->dump();
-      //L->addSpecialID();
+      newLoops.emplace(L, Header);
     }
+    
   }
   // Perform a single forward CFG traversal to populate block and subloop
   // vectors for all loops.
   PopulateLoopsDFS<BlockT, LoopT> DFS(this);
   DFS.traverse(DomRoot->getBlock());
+  for (auto & LoopInfo : newLoops) {
+    for (auto loopId : LoopInfo.second->getLoopIDs()) {
+      LoopInfo.first->addIDMetadata(loopId);
+    }
+  }
 }
 
 // Debugging
