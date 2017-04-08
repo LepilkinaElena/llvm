@@ -230,6 +230,11 @@ void Loop::addIDMetadata(const MDNode *loopID) {
     for (Loop::block_iterator I = block_begin(), E = block_end();
          I != E; ++I) {
       (*I)->addLoopID(IDNode);
+      Loop* CurParentLoop = getParentLoop();
+      while (CurParentLoop) {
+        (*I)->addLoopID(CurParentLoop->getLoopIDMetadata());
+        CurParentLoop = CurParentLoop->getParentLoop();
+      }
     }
   }
 }
