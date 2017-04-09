@@ -812,7 +812,8 @@ unsigned PrintLoopFeaturesPass::CountTermBrBlocks(const Loop& L) {
   return NumTermBrBlocks;
 }
 
-PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM) {
+PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM,
+                                             LoopFeaturesParametersBuilder *Builder) {
   //auto &IU = AM.getResult<IVUsersAnalysis>(L);
   //CountIntToFloatCast(IU);
 
@@ -848,10 +849,26 @@ PreservedAnalyses PrintLoopFeaturesPass::run(Loop &L, AnalysisManager<Loop> &AM)
     MDString *LoopIdString = dyn_cast<MDString>(L.getLoopIDMetadata()->getOperand(0));
     IDStr = LoopIdString->getString().str();
   }
-  LoopFeatures Features(PassName, IDStr, NumIVUsers,
-                        L.isLoopSimplifyForm(), L.empty(), NumIntToFloatCast,
-                        L.getLoopPreheader(), CountTermBrBlocks(L),
-                        L.getLoopLatch()->getTerminator()->getOpcode());
+  BranchInst *BI = dyn_cast<BranchInst>( L.getLoopLatch()->getTerminator());
+  if (!Builder) {
+    return PreservedAnalyses::all();
+  }
+  Builder->WithTermByCondBr(BI && !BI->isUnconditional());
+  Builder->WithHeaderAddressTaken(L.getHeader()->hasAddressTaken());
+
+  SmallVector<BasicBlock *, 4> ExitBlocks;
+  L.getExitBlocks(ExitBlocks);
+  Builder->WithPHINodesInExitBlocks(std::any_of(ExitBlocks.begin(), ExitBlocks.end(),
+                                [&](BasicBlock *BB) { return isa<PHINode>(BB->begin()); }));
+  Builder->WithIsLoopSimplifyForm(L.isLoopSimplifyForm());
+  Builder->WithIsEmpty(L.empty());
+  Builder->WithHasLoopPreheader(L.getLoopPreheader());
+  Builder->WithNumTermBrBlocks(CountTermBrBlocks(L));
+  Builder->WithLatchBlockTermOpcode(L.getLoopLatch()->getTerminator()->getOpcode());
+  LoopFeaturesParameters FeaturesParameters = Builder->WithNumIVUsers(NumIVUsers).
+                                                      WithNumIntToFloatCast(NumIntToFloatCast).
+                                                      Build();
+  LoopFeatures Features(PassName, IDStr, FeaturesParameters);
   //std::string HashNamePart = IDStr + ".";
   raw_ostream &FeaturesOutput = FileName.empty() ? dbgs() : 
                                 Features::getFeaturesOutput(/*HashNamePart + */FileName);

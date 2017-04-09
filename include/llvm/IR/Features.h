@@ -17,7 +17,7 @@ protected:
 public:
   Features(const std::string & PassName);
   virtual ~Features();
-  std::string BooleanToString (bool Feature) const;
+  static std::string BooleanToString (bool Feature);
   virtual std::string ToJSON() const;
   static raw_ostream &getFeaturesOutput(std::string FileName);
 };

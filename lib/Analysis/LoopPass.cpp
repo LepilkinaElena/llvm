@@ -13,17 +13,23 @@
 //
 //===----------------------------------------------------------------------===//
 
-
+#include "llvm/Analysis/AssumptionCache.h"
+#include "llvm/Analysis/CodeMetrics.h"
 #include "llvm/Analysis/IVUsers.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/LoopPassManager.h"
+#include "llvm/Analysis/TargetTransformInfo.h"
+#include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/LoopFeatures.h"
 #include "llvm/IR/OptBisect.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Timer.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/Utils/LoopUtils.h"
+
 using namespace llvm;
 
 #define DEBUG_TYPE "loop-pass-manager"
@@ -76,6 +82,11 @@ public:
 
   bool runOnLoop(Loop *L, LPPassManager &) override;
 
+  CodeMetrics getCodeMetrics(const Loop *L, const TargetTransformInfo &TTI,
+                             AssumptionCache *AC);
+
+  std::tuple<unsigned, unsigned> getTripTuple(Loop *L,ScalarEvolution *SE);
+
 };
 }
 
@@ -83,6 +94,9 @@ char PrintLoopFeaturesPassWrapper::ID = 0;
 INITIALIZE_PASS_BEGIN(PrintLoopFeaturesPassWrapper, "loop-features",
                       "Loop Features Printing Pass", false, true)
 INITIALIZE_PASS_DEPENDENCY(IVUsersWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(AssumptionCacheTracker)
+INITIALIZE_PASS_DEPENDENCY(TargetTransformInfoWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(ScalarEvolutionWrapperPass)
 INITIALIZE_PASS_END(PrintLoopFeaturesPassWrapper, "loop-features",
                     "Loop Features Printing Pass", false, true)
 
@@ -99,19 +113,65 @@ PrintLoopFeaturesPassWrapper::PrintLoopFeaturesPassWrapper(const std::string &Fi
 
 void PrintLoopFeaturesPassWrapper::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.addRequired<IVUsersWrapperPass>();
+  AU.addRequired<AssumptionCacheTracker>();
+  AU.addRequired<TargetTransformInfoWrapperPass>();
+  AU.addRequired<ScalarEvolutionWrapperPass>();
   //AU.addPreserved<IVUsersWrapperPass>();*/
+  //getLoopAnalysisUsage(AU);
   AU.setPreservesAll();
 }
 
+CodeMetrics PrintLoopFeaturesPassWrapper::getCodeMetrics(const Loop *L,
+                                                         const TargetTransformInfo &TTI,
+                                                         AssumptionCache *AC) {
+  SmallPtrSet<const Value *, 32> EphValues;
+  CodeMetrics::collectEphemeralValues(L, AC, EphValues);
+
+  CodeMetrics Metrics;
+  for (BasicBlock *BB : L->blocks())
+    Metrics.analyzeBasicBlock(BB, TTI, EphValues);
+  return Metrics;
+}
+
+std::tuple<unsigned, unsigned> PrintLoopFeaturesPassWrapper::getTripTuple(
+      Loop *L, ScalarEvolution *SE) {
+  // Find trip count and trip multiple if count is not available
+  unsigned TripCount = 0;
+  unsigned TripMultiple = 1;
+  // If there are multiple exiting blocks but one of them is the latch, use the
+  // latch for the trip count estimation. Otherwise insist on a single exiting
+  // block for the trip count estimation.
+  BasicBlock *ExitingBlock = L->getLoopLatch();
+  if (!ExitingBlock || !L->isLoopExiting(ExitingBlock))
+    ExitingBlock = L->getExitingBlock();
+  if (ExitingBlock) {
+    TripCount = SE->getSmallConstantTripCount(L, ExitingBlock);
+    TripMultiple = SE->getSmallConstantTripMultiple(L, ExitingBlock);
+  }
+  return std::make_tuple(TripCount, TripMultiple);
+}
+
 bool PrintLoopFeaturesPassWrapper::runOnLoop(Loop *L, LPPassManager &) {
+  Function &F = *L->getHeader()->getParent();
+
   auto BBI = find_if(L->blocks().begin(), L->blocks().end(),
                      [](BasicBlock *BB) { return BB; });
   if (BBI != L->blocks().end() &&
       isFunctionInPrintList((*BBI)->getParent()->getName())) {
     LoopAnalysisManager DummyLAM;
     auto &IU = getAnalysis<IVUsersWrapperPass>().getIU();
+    const TargetTransformInfo &TTI =
+        getAnalysis<TargetTransformInfoWrapperPass>().getTTI(F);
+    auto &AC = getAnalysis<AssumptionCacheTracker>().getAssumptionCache(F);
+    ScalarEvolution *SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
+
+    CodeMetrics Metrics = getCodeMetrics(L, TTI, &AC);
+    auto TripTuple = getTripTuple(L, SE);
+
+    LoopFeaturesParametersBuilder Builder;
+    Builder = Builder.WithCodeMetrics(Metrics).WithTripTuple(TripTuple);
     P.CountIntToFloatCast(IU);
-    P.run(*L, DummyLAM);
+    P.run(*L, DummyLAM, &Builder);
   }
   return false;
 }

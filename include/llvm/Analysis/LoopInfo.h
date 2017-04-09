@@ -878,7 +878,7 @@ public:
 
   PreservedAnalyses run(Loop &L, AnalysisManager<Loop> &);
 };
-
+class LoopFeaturesParametersBuilder;
 class PrintLoopFeaturesPass : public PassInfoMixin<PrintLoopFeaturesPass> {
   std::string FileName;
   std::string PassName;
@@ -887,7 +887,8 @@ class PrintLoopFeaturesPass : public PassInfoMixin<PrintLoopFeaturesPass> {
 public:
   PrintLoopFeaturesPass();
   PrintLoopFeaturesPass(const std::string &FileName, const std::string &PassName);
-  PreservedAnalyses run(Loop &L, AnalysisManager<Loop> &);
+  PreservedAnalyses run(Loop &L, AnalysisManager<Loop> &, 
+                        LoopFeaturesParametersBuilder *Builder = nullptr);
 
   
   void CountIntToFloatCast(const IVUsers &IU);

@@ -5,7 +5,7 @@
 #include "llvm/ADT/STLExtras.h"
 using namespace llvm;
 
-std::string Features::BooleanToString (bool Feature) const {
+std::string Features::BooleanToString (bool Feature) {
   return Feature ? "true" : "false";
 }
 
