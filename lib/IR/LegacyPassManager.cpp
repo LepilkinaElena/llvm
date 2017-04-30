@@ -661,7 +661,8 @@ void PMTopLevelManager::schedulePass(Pass *P) {
   // generate the analysis again. Stale analysis info should not be
   // available at this point.
   
-  if (PI && PI->isAnalysis() && findAnalysisPass(P->getPassID())) {
+  if (PI && PI->isAnalysis() && findAnalysisPass(P->getPassID()) && 
+      std::string(P->getPassName()) != "Loop Features Printing Pass") {
     delete P;
     return;
   }
@@ -743,6 +744,7 @@ void PMTopLevelManager::schedulePass(Pass *P) {
     Pass *PP = P->createFeaturesPrinterPass(
       FeaturesFile, std::string("Before ") + P->getPassName());
     schedulePass(PP);
+    
   }
 
   // Add the requested pass to the best available pass manager.

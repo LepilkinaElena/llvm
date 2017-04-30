@@ -167,7 +167,7 @@ bool PrintLoopFeaturesPassWrapper::runOnLoop(Loop *L, LPPassManager &) {
 
     CodeMetrics Metrics = getCodeMetrics(L, TTI, &AC);
     auto TripTuple = getTripTuple(L, SE);
-
+    
     LoopFeaturesParametersBuilder Builder;
     Builder = Builder.WithCodeMetrics(Metrics).WithTripTuple(TripTuple);
     P.CountIntToFloatCast(IU);
